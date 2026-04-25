@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum TransactionType {
+  MONTHLY
+  SPOT
+  GOALKEEPER_SERVICE
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Athlete {
+  id                     String   @id @default(uuid()) @map("id")
+  nome                   String   @map("nome")
+  cpf                    String   @unique @map("cpf")
+  email                  String   @unique @map("email")
+  telefone               String   @map("telefone")
+  enderecoCep            String   @map("endereco_cep")
+  enderecoLogradouro     String   @map("endereco_logradouro")
+  enderecoNumero         String   @map("endereco_numero")
+  enderecoComplemento    String?  @map("endereco_complemento")
+  enderecoBairro         String   @map("endereco_bairro")
+  enderecoCidade         String   @map("endereco_cidade")
+  enderecoUf             String   @map("endereco_uf")
+  idade                  Int      @map("idade")
+  sexo                   String   @map("sexo")
+  posicao                String   @map("posicao")
+  statsVelocidade        Int      @map("stats_velocidade")
+  statsResistencia       Int      @map("stats_resistencia")
+  statsForca             Int      @map("stats_forca")
+  statsPasse             Int      @map("stats_passe")
+  statsChute             Int      @map("stats_chute")
+  statsDefesa            Int      @map("stats_defesa")
+  statsDrible            Int      @map("stats_drible")
+  latitude               Float?   @map("latitude")
+  longitude              Float?   @map("longitude")
+  isGoalkeeperForHire    Boolean  @default(false) @map("is_goalkeeper_for_hire")
+  pixKey                 String?  @map("pix_key")
+
+  // Relations
+  availabilities         Availability[]
+  groupsAsAdmin          Group[] @relation("GroupAdmin")
+  financialTransactions  FinancialTransaction[]
+
+  @@map("athletes")
+}
+
+model Availability {
+  id          String  @id @default(uuid()) @map("id")
+  athleteId   String  @map("athlete_id")
+  dayOfWeek   Int     @map("day_of_week")
+  startTime   String  @map("start_time")
+  endTime     String  @map("end_time")
+
+  // Relations
+  athlete     Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@map("availabilities")
+}
+
+model Group {
+  id          String  @id @default(uuid()) @map("id")
+  name        String  @map("name")
+  adminId     String  @map("admin_id")
+  pixKey      String  @map("pix_key")
+  monthlyFee  Float   @map("monthly_fee")
+
+  // Relations
+  admin       Athlete @relation("GroupAdmin", fields: [adminId], references: [id])
+  financialTransactions FinancialTransaction[]
+
+  @@map("groups")
+}
+
+model FinancialTransaction {
+  id          String            @id @default(uuid()) @map("id")
+  athleteId   String            @map("athlete_id")
+  matchId     String?           @map("match_id")
+  groupId     String?           @map("group_id")
+  amount      Float             @map("amount")
+  type        TransactionType   @map("type")
+  status      TransactionStatus @default(PENDING) @map("status")
+  platformFee Float             @map("platform_fee")
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  athlete     Athlete           @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  match       Match?            @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  group       Group?            @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@map("financial_transactions")
+}
+
+model Match {
+  id             String       @id @default(uuid()) @map("id")
+  groupId        String       @map("group_id")
+  date           DateTime     @map("date")
+  latitude       Float        @map("latitude")
+  longitude      Float        @map("longitude")
+  minAge         Int          @map("min_age")
+  maxAge         Int          @map("max_age")
+  minOverall     Int          @map("min_overall")
+  vacanciesOpen  Int          @map("vacancies_open")
+  status         MatchStatus  @default(SCHEDULED) @map("status")
+
+  // Relations
+  financialTransactions FinancialTransaction[]
+
+  @@map("matches")
+}
+
+model Ad {
+  id          String  @id @default(uuid()) @map("id")
+  title       String  @map("title")
+  description String  @map("description")
+  imageUrl    String  @map("image_url")
+  targetUrl   String  @map("target_url")
+  latitude    Float   @map("latitude")
+  longitude   Float   @map("longitude")
+  radiusInKm  Float   @map("radius_in_km")
+  category    String  @map("category")
+  status      String  @default("ACTIVE") @map("status")
+  active      Boolean @default(true) @map("active")
+
+  @@map("ads")
+}
