@@ -8,6 +8,7 @@ import {
   CheckInRequestDTO,
   RegisterRatingRequestDTO,
   MatchmakingRequestDTO,
+  CancelMatchRequestDTO,
 } from '../dtos/MatchRequestDTO.js';
 import { CreateMatchUseCase } from '../../../core/use-cases/CreateMatchUseCase.js';
 import { RespondMatchInviteUseCase } from '../../../core/use-cases/RespondMatchInviteUseCase.js';
@@ -16,6 +17,7 @@ import { ConfirmPresenceUseCase } from '../../../core/use-cases/ConfirmPresenceU
 import { CheckInUseCase } from '../../../core/use-cases/CheckInUseCase.js';
 import { RegisterRatingUseCase } from '../../../core/use-cases/RegisterRatingUseCase.js';
 import { MatchmakingUseCase } from '../../../core/use-cases/MatchmakingUseCase.js';
+import { CancelMatchUseCase } from '../../../core/use-cases/CancelMatchUseCase.js';
 import { PrismaMatchRepository } from '../../database/prisma/repositories/PrismaMatchRepository.js';
 import { PrismaMatchInviteRepository } from '../../database/prisma/repositories/PrismaMatchInviteRepository.js';
 import { PrismaGroupRepository } from '../../database/prisma/repositories/PrismaGroupRepository.js';
@@ -135,6 +137,21 @@ export class MatchController {
         new PrismaAthleteRepository(),
       ).execute({ matchId, teamsCount });
       res.status(200).json(result);
+    } catch (error) { this.handleError(error, res); }
+  }
+
+  async cancelMatch(req: Request, res: Response): Promise<void> {
+    try {
+      const matchId = req.params['matchId'] as string;
+      const { adminId, reason } = CancelMatchRequestDTO.parse(req.body);
+      await new CancelMatchUseCase(
+        new PrismaMatchRepository(prisma),
+        new PrismaMatchInviteRepository(prisma),
+        new PrismaGroupRepository(prisma),
+        new PrismaAthleteRepository(),
+        new PrismaNotificationRepository(prisma),
+      ).execute({ matchId, adminId, reason });
+      res.status(200).json({ success: true });
     } catch (error) { this.handleError(error, res); }
   }
 

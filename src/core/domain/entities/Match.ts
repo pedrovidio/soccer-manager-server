@@ -109,4 +109,11 @@ export class Match {
     }
     this.status = MatchStatus.FINISHED;
   }
+
+  public cancel(): void {
+    if (this.status === MatchStatus.FINISHED || this.status === MatchStatus.CANCELLED) {
+      throw new BusinessRuleViolationError('Match cannot be cancelled in its current status');
+    }
+    this.status = MatchStatus.CANCELLED;
+  }
 }

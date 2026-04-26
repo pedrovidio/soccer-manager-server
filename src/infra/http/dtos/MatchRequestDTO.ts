@@ -49,3 +49,8 @@ export const RegisterRatingRequestDTO = z.object({
 export const MatchmakingRequestDTO = z.object({
   teamsCount: z.number().int().min(2).max(4).default(2),
 });
+
+export const CancelMatchRequestDTO = z.object({
+  adminId: z.string().uuid(),
+  reason:  z.string().min(10, 'Reason must have at least 10 characters'),
+});

@@ -12,5 +12,6 @@ router.post('/matches/:matchId/confirm-presence',    (req, res) => c.confirmPres
 router.post('/matches/:matchId/check-in',            (req, res) => c.checkIn(req, res));
 router.post('/matches/:matchId/ratings',             (req, res) => c.registerRating(req, res));
 router.post('/matches/:matchId/matchmaking',         (req, res) => c.matchmaking(req, res));
+router.patch('/matches/:matchId/cancel',             (req, res) => c.cancelMatch(req, res));
 
 export { router as matchRouter };
