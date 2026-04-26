@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { Athlete, Address, Stats, FootballLevel } from '../domain/entities/Athlete.js';
 import { IAthleteRepository } from '../domain/repositories/IAthleteRepository.js';
 import { BusinessRuleViolationError } from '../domain/errors/BusinessRuleViolationError.js';
@@ -14,6 +15,7 @@ interface RegisterAthleteInput {
   email: string;
   cpf: string;
   phone: string;
+  password: string;
   age: number;
   gender: 'M' | 'F';
   address: Address;
@@ -32,6 +34,8 @@ export class RegisterAthleteUseCase {
     const existingByEmail = await this.athleteRepository.findByEmail(input.email);
     if (existingByEmail) throw new BusinessRuleViolationError('Athlete with this email already exists');
 
+    const passwordHash = await bcrypt.hash(input.password, 10);
+
     const athlete = new Athlete(
       input.name,
       input.cpf,
@@ -47,6 +51,11 @@ export class RegisterAthleteUseCase {
       input.latitude,
       input.longitude,
       input.isGoalkeeperForHire ?? false,
+      false,
+      0,
+      false,
+      undefined,
+      passwordHash,
     );
 
     await this.athleteRepository.save(athlete);

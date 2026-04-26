@@ -48,6 +48,7 @@ export class Athlete {
   public financialDebt: number;
   public hasCompletedAssessment: boolean;
   public photoUrl: string | undefined;
+  public passwordHash: string;
   private stats: Stats;
 
   constructor(
@@ -69,6 +70,7 @@ export class Athlete {
     financialDebt: number = 0,
     hasCompletedAssessment: boolean = false,
     photoUrl?: string,
+    passwordHash: string = '',
   ) {
     this.validateName(name);
     this.validateCpf(cpf);
@@ -95,6 +97,7 @@ export class Athlete {
     this.financialDebt = financialDebt;
     this.hasCompletedAssessment = hasCompletedAssessment;
     this.photoUrl = photoUrl;
+    this.passwordHash = passwordHash;
   }
 
   public updatePhoto(url: string): void {

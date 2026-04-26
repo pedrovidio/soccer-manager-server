@@ -109,6 +109,7 @@ model Athlete {
   hasCompletedAssessment Boolean       @default(false) @map("has_completed_assessment")
   pixKey                 String?       @map("pix_key")
   photoUrl               String?       @map("photo_url")
+  passwordHash           String        @default("") @map("password_hash")
 
   availabilities        Availability[]
   financialTransactions FinancialTransaction[]

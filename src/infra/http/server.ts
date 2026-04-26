@@ -4,6 +4,7 @@ import { athleteRouter } from './routes/athlete.routes.js';
 import { assessmentRouter } from './routes/assessment.routes.js';
 import { groupRouter } from './routes/group.routes.js';
 import { matchRouter } from './routes/match.routes.js';
+import { authRouter } from './routes/auth.routes.js';
 import { startCronJobs } from '../jobs/cron.js';
 
 const app = express();
@@ -11,6 +12,7 @@ const PORT = 3333;
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+app.use(authRouter);
 app.use(athleteRouter);
 app.use(assessmentRouter);
 app.use(groupRouter);

@@ -13,8 +13,12 @@ export class AthleteController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const data = CreateAthleteRequestDTO.parse(req.body);
-      const athlete = await new RegisterAthleteUseCase(new PrismaAthleteRepository()).execute(data);
-      res.status(201).json(athlete);
+      const athlete = await new RegisterAthleteUseCase(new PrismaAthleteRepository()).execute({
+        ...data,
+        password: data.password,
+      });
+      const { passwordHash: _, ...safeAthlete } = athlete as any;
+      res.status(201).json(safeAthlete);
     } catch (error) {
       this.handleError(error, res);
     }
