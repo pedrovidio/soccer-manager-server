@@ -21,8 +21,8 @@ export class LoginUseCase {
     const athlete = await this.athleteRepository.findByEmail(email);
     if (!athlete) throw new BusinessRuleViolationError('Invalid credentials');
 
-    const valid = await bcrypt.compare(password, athlete.passwordHash);
-    if (!valid) throw new BusinessRuleViolationError('Invalid credentials');
+    const valid = await bcrypt.compare(password, athlete.passwordHash ?? '');
+    if (!valid || !athlete.passwordHash) throw new BusinessRuleViolationError('Invalid credentials');
 
     const secret = process.env['JWT_SECRET'];
     if (!secret) throw new Error('JWT_SECRET is not configured');

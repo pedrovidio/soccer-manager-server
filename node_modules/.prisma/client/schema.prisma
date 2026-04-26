@@ -109,13 +109,27 @@ model Athlete {
   hasCompletedAssessment Boolean       @default(false) @map("has_completed_assessment")
   pixKey                 String?       @map("pix_key")
   photoUrl               String?       @map("photo_url")
-  passwordHash           String        @default("") @map("password_hash")
+  passwordHash           String?       @map("password_hash")
 
   availabilities        Availability[]
   financialTransactions FinancialTransaction[]
   assessment            Assessment?
+  socialAccounts        AthleteSocialAccount[]
 
   @@map("athletes")
+}
+
+model AthleteSocialAccount {
+  id         String   @id @default(uuid()) @map("id")
+  athleteId  String   @map("athlete_id")
+  provider   String   @map("provider")
+  providerId String   @map("provider_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  athlete Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("athlete_social_accounts")
 }
 
 model Assessment {

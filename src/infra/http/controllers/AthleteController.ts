@@ -5,17 +5,33 @@ import { RegisterAthleteUseCase } from '../../../core/use-cases/RegisterAthleteU
 import { UpdateAthleteLocationUseCase } from '../../../core/use-cases/UpdateAthleteLocationUseCase.js';
 import { UploadAthletePhotoUseCase } from '../../../core/use-cases/UploadAthletePhotoUseCase.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
+import { PrismaAthleteSocialAccountRepository } from '../../database/prisma/repositories/PrismaAthleteSocialAccountRepository.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
 import { BusinessRuleViolationError } from '../../../core/domain/errors/BusinessRuleViolationError.js';
+import { prisma } from '../../database/prisma/client.js';
 
 export class AthleteController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const data = CreateAthleteRequestDTO.parse(req.body);
-      const athlete = await new RegisterAthleteUseCase(new PrismaAthleteRepository()).execute({
-        ...data,
-        password: data.password,
+      const useCase = new RegisterAthleteUseCase(
+        new PrismaAthleteRepository(),
+        new PrismaAthleteSocialAccountRepository(prisma),
+      );
+      const athlete = await useCase.execute({
+        name: data.name,
+        email: data.email,
+        cpf: data.cpf,
+        phone: data.phone,
+        age: data.age,
+        gender: data.gender,
+        address: data.address,
+        isGoalkeeperForHire: data.isGoalkeeperForHire,
+        ...(data.latitude   !== undefined && { latitude:   data.latitude }),
+        ...(data.longitude  !== undefined && { longitude:  data.longitude }),
+        ...(data.password   !== undefined && { password:   data.password }),
+        ...(data.tempToken  !== undefined && { tempToken:  data.tempToken }),
       });
       const { passwordHash: _, ...safeAthlete } = athlete as any;
       res.status(201).json(safeAthlete);

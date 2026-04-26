@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const CreateAthleteRequestDTO = z.object({
-  password: z.string().min(6, 'Password must have at least 6 characters'),
   name: z.string().min(1, 'Athlete name is required.'),
   email: z.string().email('Email must have a valid format.'),
   cpf: z.string()
@@ -22,6 +21,10 @@ export const CreateAthleteRequestDTO = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   isGoalkeeperForHire: z.boolean().default(false),
+  password: z.string().min(6, 'Password must have at least 6 characters').optional(),
+  tempToken: z.string().optional(),
+}).refine((d) => d.password || d.tempToken, {
+  message: 'Either password or tempToken must be provided',
 });
 
 export type CreateAthleteRequest = z.infer<typeof CreateAthleteRequestDTO>;
