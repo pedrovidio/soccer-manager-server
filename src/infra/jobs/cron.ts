@@ -1,10 +1,12 @@
 import cron from 'node-cron';
 import { AutoOpenVacanciesUseCase } from '../../core/use-cases/AutoOpenVacanciesUseCase.js';
+import { ConsumeAdminDelegationMatchUseCase } from '../../core/use-cases/ConsumeAdminDelegationMatchUseCase.js';
 import { PrismaMatchRepository } from '../database/prisma/repositories/PrismaMatchRepository.js';
 import { PrismaMatchInviteRepository } from '../database/prisma/repositories/PrismaMatchInviteRepository.js';
 import { PrismaGroupRepository } from '../database/prisma/repositories/PrismaGroupRepository.js';
 import { PrismaAthleteRepository } from '../database/prisma/repositories/PrismaAthleteRepository.js';
 import { PrismaNotificationRepository } from '../database/prisma/repositories/PrismaNotificationRepository.js';
+import { PrismaGroupAdminDelegationRepository } from '../database/prisma/repositories/PrismaGroupAdminDelegationRepository.js';
 import { WhatsAppService } from '../services/WhatsAppService.js';
 import { prisma } from '../database/prisma/client.js';
 
@@ -27,6 +29,29 @@ export function startCronJobs(): void {
       }
     } catch (err) {
       console.error('[Cron] AutoOpenVacancies error:', err);
+    }
+  });
+
+  // Runs every hour — consumes match count on temporary admin delegations for finished matches
+  cron.schedule('0 * * * *', async () => {
+    try {
+      const consumeUseCase = new ConsumeAdminDelegationMatchUseCase(
+        new PrismaGroupRepository(prisma),
+        new PrismaGroupAdminDelegationRepository(prisma),
+      );
+      const recentlyFinished = await prisma.match.findMany({
+        where: {
+          status: 'FINISHED',
+          date: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+        },
+        select: { groupId: true },
+        distinct: ['groupId'],
+      });
+      for (const { groupId } of recentlyFinished) {
+        await consumeUseCase.execute({ groupId });
+      }
+    } catch (err) {
+      console.error('[Cron] ConsumeAdminDelegation error:', err);
     }
   });
 

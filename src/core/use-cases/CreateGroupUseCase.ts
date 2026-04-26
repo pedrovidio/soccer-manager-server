@@ -6,7 +6,7 @@ import { EntityNotFoundError } from '../domain/errors/EntityNotFoundError.js';
 export interface CreateGroupInput {
   adminId: string;
   name: string;
-  description: string;
+  description?: string;
   pixKey?: string;
   baseLocation?: { latitude: number; longitude: number };
 }
@@ -14,7 +14,7 @@ export interface CreateGroupInput {
 export interface CreateGroupOutput {
   id: string;
   name: string;
-  description: string;
+  description: string | undefined;
   adminIds: string[];
   memberIds: string[];
   status: string;
@@ -32,12 +32,13 @@ export class CreateGroupUseCase {
 
     const group = new Group(
       input.name,
-      input.description,
       [input.adminId],
       [],
       undefined,
       input.baseLocation,
       input.pixKey,
+      undefined,
+      input.description,
     );
 
     await this.groupRepository.save(group);

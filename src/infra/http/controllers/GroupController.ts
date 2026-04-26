@@ -5,16 +5,22 @@ import {
   InviteAthleteRequestDTO,
   RespondInviteRequestDTO,
   SearchAthletesRequestDTO,
+  DelegateAdminRequestDTO,
+  RevokeAdminRequestDTO,
 } from '../dtos/GroupRequestDTO.js';
 import { CreateGroupUseCase } from '../../../core/use-cases/CreateGroupUseCase.js';
 import { InviteAthleteToGroupUseCase } from '../../../core/use-cases/InviteAthleteToGroupUseCase.js';
 import { RespondGroupInviteUseCase } from '../../../core/use-cases/RespondGroupInviteUseCase.js';
 import { ListInvitesUseCase } from '../../../core/use-cases/ListInvitesUseCase.js';
 import { SearchAthletesUseCase } from '../../../core/use-cases/SearchAthletesUseCase.js';
+import { UploadGroupPhotoUseCase } from '../../../core/use-cases/UploadGroupPhotoUseCase.js';
+import { DelegateGroupAdminUseCase } from '../../../core/use-cases/DelegateGroupAdminUseCase.js';
+import { RevokeGroupAdminUseCase } from '../../../core/use-cases/RevokeGroupAdminUseCase.js';
 import { PrismaGroupRepository } from '../../database/prisma/repositories/PrismaGroupRepository.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
 import { PrismaGroupInviteRepository } from '../../database/prisma/repositories/PrismaGroupInviteRepository.js';
 import { PrismaNotificationRepository } from '../../database/prisma/repositories/PrismaNotificationRepository.js';
+import { PrismaGroupAdminDelegationRepository } from '../../database/prisma/repositories/PrismaGroupAdminDelegationRepository.js';
 import { WhatsAppService } from '../../services/WhatsAppService.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
@@ -32,8 +38,8 @@ export class GroupController {
       const result = await useCase.execute({
         adminId: data.adminId,
         name: data.name,
-        description: data.description,
-        ...(data.pixKey      !== undefined && { pixKey:       data.pixKey }),
+        ...(data.description  !== undefined && { description:  data.description }),
+        ...(data.pixKey       !== undefined && { pixKey:       data.pixKey }),
         ...(data.baseLocation !== undefined && { baseLocation: data.baseLocation }),
       });
       res.status(201).json(result);
@@ -100,6 +106,57 @@ export class GroupController {
       );
       const result = await useCase.execute({ athleteId });
       res.status(200).json(result);
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async uploadPhoto(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const adminId = req.body['adminId'] as string;
+      if (!adminId) { res.status(400).json({ error: 'adminId is required' }); return; }
+      if (!req.file) { res.status(400).json({ error: 'No file uploaded' }); return; }
+      const photoUrl = `/uploads/${req.file.filename}`;
+      await new UploadGroupPhotoUseCase(new PrismaGroupRepository(prisma)).execute({ groupId, adminId, photoUrl });
+      res.status(200).json({ photoUrl });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async delegateAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const data = DelegateAdminRequestDTO.parse(req.body);
+      const useCase = new DelegateGroupAdminUseCase(
+        new PrismaGroupRepository(prisma),
+        new PrismaAthleteRepository(),
+        new PrismaGroupAdminDelegationRepository(prisma),
+      );
+      const result = await useCase.execute({
+        groupId,
+        requesterId: data.requesterId,
+        delegatedTo: data.delegatedTo,
+        isPermanent: data.isPermanent,
+        ...(data.matchesLimit !== undefined && { matchesLimit: data.matchesLimit }),
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async revokeAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const data = RevokeAdminRequestDTO.parse(req.body);
+      const useCase = new RevokeGroupAdminUseCase(
+        new PrismaGroupRepository(prisma),
+        new PrismaGroupAdminDelegationRepository(prisma),
+      );
+      await useCase.execute({ groupId, requesterId: data.requesterId, delegatedTo: data.delegatedTo });
+      res.status(200).json({ success: true });
     } catch (error) {
       this.handleError(error, res);
     }

@@ -9,25 +9,24 @@ export enum GroupStatus {
 export class Group {
   public readonly id: string;
   public name: string;
-  public description: string;
+  public description: string | undefined;
   public adminIds: string[];
   public pixKey?: string | undefined;
+  public photoUrl: string | undefined;
   public memberIds: string[];
-  public baseLocation: {
-    latitude: number;
-    longitude: number;
-  } | undefined;
+  public baseLocation: { latitude: number; longitude: number } | undefined;
   public status: GroupStatus;
 
   constructor(
     name: string,
-    description: string,
     adminIds: string[],
     memberIds: string[] = [],
     status: GroupStatus = GroupStatus.ACTIVE,
     baseLocation?: { latitude: number; longitude: number },
     pixKey?: string,
     id?: string,
+    description?: string,
+    photoUrl?: string,
   ) {
     this.validateName(name);
 
@@ -39,6 +38,7 @@ export class Group {
     this.status = status;
     this.pixKey = pixKey;
     this.baseLocation = baseLocation;
+    this.photoUrl = photoUrl;
   }
 
   private validateName(name: string): void {
@@ -63,5 +63,9 @@ export class Group {
       throw new BusinessRuleViolationError('Athlete is already a mensalista in this group');
     }
     this.memberIds.push(athleteId);
+  }
+
+  public updatePhoto(url: string): void {
+    this.photoUrl = url;
   }
 }

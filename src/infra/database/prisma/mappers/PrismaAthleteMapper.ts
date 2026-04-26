@@ -30,6 +30,7 @@ interface PrismaAthlete {
   financialDebt: number;
   hasCompletedAssessment: boolean;
   pixKey: string | null;
+  photoUrl: string | null;
 }
 
 export class PrismaAthleteMapper {
@@ -65,6 +66,7 @@ export class PrismaAthleteMapper {
       financialDebt: athlete.financialDebt,
       hasCompletedAssessment: athlete.hasCompletedAssessment,
       pixKey: null,
+      photoUrl: athlete.photoUrl ?? null,
     };
   }
 
@@ -105,6 +107,7 @@ export class PrismaAthleteMapper {
       raw.isInjured,
       raw.financialDebt,
       raw.hasCompletedAssessment,
+      raw.photoUrl ?? undefined,
     );
   }
 }

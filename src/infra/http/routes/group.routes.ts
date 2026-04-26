@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { GroupController } from '../controllers/GroupController.js';
 import { NotificationController } from '../controllers/NotificationController.js';
+import { photoUpload } from '../middlewares/photoUpload.js';
 
 const router = Router();
 const groupController = new GroupController();
@@ -8,6 +9,9 @@ const notificationController = new NotificationController();
 
 // Groups
 router.post('/groups', (req, res) => groupController.create(req, res));
+router.patch('/groups/:groupId/photo', photoUpload.single('photo'), (req, res) => groupController.uploadPhoto(req, res));
+router.post('/groups/:groupId/admin/delegate', (req, res) => groupController.delegateAdmin(req, res));
+router.delete('/groups/:groupId/admin/delegate', (req, res) => groupController.revokeAdmin(req, res));
 
 // Athlete search (for invite flow)
 router.get('/groups/athletes/search', (req, res) => groupController.searchAthletes(req, res));

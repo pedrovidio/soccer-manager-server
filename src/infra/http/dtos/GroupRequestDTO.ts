@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const CreateGroupRequestDTO = z.object({
   adminId: z.string().uuid(),
   name: z.string().min(3, 'Group name must have at least 3 characters'),
-  description: z.string().min(1, 'Description cannot be empty'),
+  description: z.string().optional(),
   pixKey: z.string().optional(),
   baseLocation: z.object({
     latitude: z.number(),
@@ -32,4 +32,18 @@ export const SearchAthletesRequestDTO = z.object({
   email: z.string().optional(),
 }).refine((d) => d.name || d.cpf || d.email, {
   message: 'At least one search filter must be provided',
+});
+
+export const DelegateAdminRequestDTO = z.object({
+  requesterId: z.string().uuid(),
+  delegatedTo: z.string().uuid(),
+  isPermanent: z.boolean(),
+  matchesLimit: z.number().int().min(1).optional(),
+}).refine((d) => d.isPermanent || d.matchesLimit !== undefined, {
+  message: 'matchesLimit is required for temporary delegations',
+});
+
+export const RevokeAdminRequestDTO = z.object({
+  requesterId: z.string().uuid(),
+  delegatedTo: z.string().uuid(),
 });

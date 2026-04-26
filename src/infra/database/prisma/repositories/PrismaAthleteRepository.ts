@@ -36,6 +36,13 @@ export class PrismaAthleteRepository implements IAthleteRepository {
     });
   }
 
+  async updatePhoto(athleteId: string, photoUrl: string): Promise<void> {
+    await prisma.athlete.update({
+      where: { id: athleteId },
+      data: { photoUrl },
+    });
+  }
+
   async findNearby(filters: FindNearbyFilters): Promise<Athlete[]> {
     const whereConditions: Prisma.Sql[] = [
       Prisma.sql`financial_debt = 0`,

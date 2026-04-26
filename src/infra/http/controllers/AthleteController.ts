@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { CreateAthleteRequestDTO, UpdateLocationRequestDTO } from '../dtos/CreateAthleteRequestDTO.js';
 import { RegisterAthleteUseCase } from '../../../core/use-cases/RegisterAthleteUseCase.js';
 import { UpdateAthleteLocationUseCase } from '../../../core/use-cases/UpdateAthleteLocationUseCase.js';
+import { UploadAthletePhotoUseCase } from '../../../core/use-cases/UploadAthletePhotoUseCase.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
@@ -25,6 +26,21 @@ export class AthleteController {
       const { latitude, longitude } = UpdateLocationRequestDTO.parse(req.body);
       await new UpdateAthleteLocationUseCase(new PrismaAthleteRepository()).execute({ athleteId, latitude, longitude });
       res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async uploadPhoto(req: Request, res: Response): Promise<void> {
+    try {
+      const athleteId = req.params['athleteId'] as string;
+      if (!req.file) {
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+      const photoUrl = `/uploads/${req.file.filename}`;
+      await new UploadAthletePhotoUseCase(new PrismaAthleteRepository()).execute({ athleteId, photoUrl });
+      res.status(200).json({ photoUrl });
     } catch (error) {
       this.handleError(error, res);
     }
