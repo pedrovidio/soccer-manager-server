@@ -12,6 +12,7 @@ router.post('/groups', (req, res) => groupController.create(req, res));
 router.patch('/groups/:groupId/photo', photoUpload.single('photo'), (req, res) => groupController.uploadPhoto(req, res));
 router.post('/groups/:groupId/admin/delegate', (req, res) => groupController.delegateAdmin(req, res));
 router.delete('/groups/:groupId/admin/delegate', (req, res) => groupController.revokeAdmin(req, res));
+router.get('/groups/:groupId/balance', (req, res) => groupController.balance(req, res));
 
 // Athlete search (for invite flow)
 router.get('/groups/athletes/search', (req, res) => groupController.searchAthletes(req, res));

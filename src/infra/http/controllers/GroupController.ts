@@ -16,11 +16,13 @@ import { SearchAthletesUseCase } from '../../../core/use-cases/SearchAthletesUse
 import { UploadGroupPhotoUseCase } from '../../../core/use-cases/UploadGroupPhotoUseCase.js';
 import { DelegateGroupAdminUseCase } from '../../../core/use-cases/DelegateGroupAdminUseCase.js';
 import { RevokeGroupAdminUseCase } from '../../../core/use-cases/RevokeGroupAdminUseCase.js';
+import { GetGroupBalanceUseCase } from '../../../core/use-cases/GetGroupBalanceUseCase.js';
 import { PrismaGroupRepository } from '../../database/prisma/repositories/PrismaGroupRepository.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
 import { PrismaGroupInviteRepository } from '../../database/prisma/repositories/PrismaGroupInviteRepository.js';
 import { PrismaNotificationRepository } from '../../database/prisma/repositories/PrismaNotificationRepository.js';
 import { PrismaGroupAdminDelegationRepository } from '../../database/prisma/repositories/PrismaGroupAdminDelegationRepository.js';
+import { PrismaFinancialRepository } from '../../database/prisma/repositories/PrismaFinancialRepository.js';
 import { WhatsAppService } from '../../services/WhatsAppService.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
@@ -158,6 +160,30 @@ export class GroupController {
       );
       await useCase.execute({ groupId, requesterId: data.requesterId, delegatedTo: data.delegatedTo });
       res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async balance(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId     = req.params['groupId'] as string;
+      const requesterId = req.query['requesterId'] as string;
+      if (!requesterId) { res.status(400).json({ error: 'requesterId is required' }); return; }
+
+      const from = req.query['from'] ? new Date(req.query['from'] as string) : undefined;
+      const to   = req.query['to']   ? new Date(req.query['to']   as string) : undefined;
+
+      const useCase = new GetGroupBalanceUseCase(
+        new PrismaGroupRepository(prisma),
+        new PrismaFinancialRepository(),
+      );
+      const result = await useCase.execute({
+        groupId,
+        requesterId,
+        ...(from || to ? { filters: { ...(from && { from }), ...(to && { to }) } } : {}),
+      });
+      res.status(200).json(result);
     } catch (error) {
       this.handleError(error, res);
     }
