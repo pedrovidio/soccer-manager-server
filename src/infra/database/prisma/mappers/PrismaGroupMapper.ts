@@ -8,6 +8,7 @@ interface PrismaGroupRaw {
   member_ids: string[];
   base_location_latitude: number | null;
   base_location_longitude: number | null;
+  pix_key: string | null;
   status: string;
 }
 
@@ -27,6 +28,7 @@ export class PrismaGroupMapper {
       raw.member_ids,
       raw.status as GroupStatus,
       baseLocation,
+      raw.pix_key ?? undefined,
       raw.id,
     );
   }
@@ -40,6 +42,7 @@ export class PrismaGroupMapper {
       member_ids: group.memberIds,
       base_location_latitude: group.baseLocation?.latitude ?? null,
       base_location_longitude: group.baseLocation?.longitude ?? null,
+      pix_key: group.pixKey ?? null,
       status: group.status,
     };
   }

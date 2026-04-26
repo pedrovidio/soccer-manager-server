@@ -1,37 +1,25 @@
-import { Athlete, Address, Stats } from '../domain/entities/Athlete.js';
+import { Athlete, Address, Stats, FootballLevel } from '../domain/entities/Athlete.js';
 import { IAthleteRepository } from '../domain/repositories/IAthleteRepository.js';
 import { BusinessRuleViolationError } from '../domain/errors/BusinessRuleViolationError.js';
 
+const DEFAULT_STATS: Stats = {
+  pace: 50, shooting: 50, passing: 50,
+  dribbling: 50, defense: 50, physical: 50,
+};
+
+const DEFAULT_FOOTBALL_LEVEL: FootballLevel = 'CASUAL';
+
 interface RegisterAthleteInput {
-  nome: string;
+  name: string;
   email: string;
   cpf: string;
-  telefone: string;
-  posicao: string;
-  idade: number;
-  sexo: 'M' | 'F';
-  address: {
-    cep: string;
-    logradouro: string;
-    numero: string;
-    complemento?: string | undefined;
-    bairro: string;
-    cidade: string;
-    uf: string;
-  };
-  stats: {
-    velocidade: number;
-    resistencia: number;
-    forca: number;
-    passe: number;
-    chute: number;
-    defesa: number;
-    drible: number;
-  };
+  phone: string;
+  age: number;
+  gender: 'M' | 'F';
+  address: Address;
   latitude?: number | undefined;
   longitude?: number | undefined;
-  isGoalkeeperForHire?: boolean | undefined;
-  pixKey?: string | undefined;
+  isGoalkeeperForHire?: boolean;
 }
 
 export class RegisterAthleteUseCase {
@@ -39,30 +27,26 @@ export class RegisterAthleteUseCase {
 
   async execute(input: RegisterAthleteInput): Promise<Athlete> {
     const existingByCpf = await this.athleteRepository.findByCpf(input.cpf);
-    if (existingByCpf) {
-      throw new BusinessRuleViolationError('Athlete with this CPF already exists');
-    }
+    if (existingByCpf) throw new BusinessRuleViolationError('Athlete with this CPF already exists');
 
     const existingByEmail = await this.athleteRepository.findByEmail(input.email);
-    if (existingByEmail) {
-      throw new BusinessRuleViolationError('Athlete with this email already exists');
-    }
+    if (existingByEmail) throw new BusinessRuleViolationError('Athlete with this email already exists');
 
     const athlete = new Athlete(
-      input.nome,
+      input.name,
       input.cpf,
       input.email,
-      input.telefone,
-      input.address as Address,
-      input.idade,
-      input.sexo,
-      input.posicao,
-      input.stats as Stats,
-      undefined, // id
+      input.phone,
+      input.address,
+      input.age,
+      input.gender,
+      'Undefined',
+      DEFAULT_STATS,
+      DEFAULT_FOOTBALL_LEVEL,
+      undefined,
       input.latitude,
       input.longitude,
       input.isGoalkeeperForHire ?? false,
-      input.pixKey
     );
 
     await this.athleteRepository.save(athlete);

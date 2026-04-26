@@ -1,0 +1,241 @@
+
+> soccer-manager-server@1.0.0 dev
+> tsx watch src/infra/http/server.ts
+
+Server running on port 3333
+[AthleteController] Error: ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "name"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "phone"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "age"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  },
+  {
+    "code": "invalid_value",
+    "values": [
+      "M",
+      "F"
+    ],
+    "path": [
+      "gender"
+    ],
+    "message": "Invalid option: expected one of \"M\"|\"F\""
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "address",
+      "street"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "address",
+      "number"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "address",
+      "neighborhood"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "address",
+      "city"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "address",
+      "state"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  }
+]
+    at AthleteController.create (d:\Documentos\projetos\soccer-manager-server\src\infra\http\controllers\AthleteController.ts:13:53)
+    at <anonymous> (d:\Documentos\projetos\soccer-manager-server\src\infra\http\routes\athlete.routes.ts:7:58)
+    at Layer.handleRequest (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\layer.js:152:17)
+    at next (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\route.js:117:3)
+    at handle (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\layer.js:152:17)
+    at d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:295:15
+    at processParams (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:582:12)
+    at next (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:291:5)
+[AthleteController] Error: BusinessRuleViolationError: Athlete with this CPF already exists
+    at RegisterAthleteUseCase.execute (d:\Documentos\projetos\soccer-manager-server\src\core\use-cases\RegisterAthleteUseCase.ts:30:30)
+    at async AthleteController.create (d:\Documentos\projetos\soccer-manager-server\src\infra\http\controllers\AthleteController.ts:18:23) {
+  code: 'BUSINESS_RULE_VIOLATION'
+}
+[AthleteController] Error: ZodError: [
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "name"
+    ],
+    "message": "Athlete name is required."
+  },
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "email",
+    "pattern": "/^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$/",
+    "path": [
+      "email"
+    ],
+    "message": "Email must have a valid format."
+  },
+  {
+    "code": "custom",
+    "path": [
+      "cpf"
+    ],
+    "message": "CPF must contain exactly 11 digits."
+  },
+  {
+    "origin": "string",
+    "code": "invalid_format",
+    "format": "regex",
+    "pattern": "/^\\(?\\d{2}\\)?\\s?\\d{4,5}-?\\d{4}$|^\\d{10,11}$/",
+    "path": [
+      "phone"
+    ],
+    "message": "Phone must be in a valid format."
+  },
+  {
+    "origin": "number",
+    "code": "too_small",
+    "minimum": 16,
+    "inclusive": true,
+    "path": [
+      "age"
+    ],
+    "message": "Age must be at least 16."
+  },
+  {
+    "code": "invalid_value",
+    "values": [
+      "M",
+      "F"
+    ],
+    "path": [
+      "gender"
+    ],
+    "message": "Invalid option: expected one of \"M\"|\"F\""
+  },
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "address",
+      "cep"
+    ],
+    "message": "CEP is required."
+  },
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "address",
+      "street"
+    ],
+    "message": "Street is required."
+  },
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "address",
+      "number"
+    ],
+    "message": "Number is required."
+  },
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "address",
+      "neighborhood"
+    ],
+    "message": "Neighborhood is required."
+  },
+  {
+    "origin": "string",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "address",
+      "city"
+    ],
+    "message": "City is required."
+  },
+  {
+    "origin": "string",
+    "code": "too_big",
+    "maximum": 2,
+    "inclusive": true,
+    "exact": true,
+    "path": [
+      "address",
+      "state"
+    ],
+    "message": "State must have exactly 2 characters."
+  }
+]
+    at AthleteController.create (d:\Documentos\projetos\soccer-manager-server\src\infra\http\controllers\AthleteController.ts:13:53)
+    at <anonymous> (d:\Documentos\projetos\soccer-manager-server\src\infra\http\routes\athlete.routes.ts:7:58)
+    at Layer.handleRequest (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\layer.js:152:17)
+    at next (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\route.js:157:13)
+    at Route.dispatch (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\route.js:117:3)
+    at handle (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:435:11)
+    at Layer.handleRequest (d:\Documentos\projetos\soccer-manager-server\node_modules\router\lib\layer.js:152:17)
+    at d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:295:15
+    at processParams (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:582:12)
+    at next (d:\Documentos\projetos\soccer-manager-server\node_modules\router\index.js:291:5)
+
+d:\Documentos\projetos\soccer-manager-server>

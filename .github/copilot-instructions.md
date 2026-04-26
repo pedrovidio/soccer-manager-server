@@ -4,6 +4,7 @@ Você é um arquiteto de software especialista em Clean Architecture e Clean Cod
 
 ## 🛠 Premissas Técnicas Globais
 - **Linguagem:** TypeScript (Strict Mode).
+- **Banco de Dados:** PostgreSQL.
 - **Idioma do Código:** Inglês (Variáveis, funções, classes).
 - **Padrão de Nomenclatura:** PascalCase para classes/interfaces, camelCase para métodos/variáveis.
 - **Princípios:** SOLID, DRY, KISS e YAGNI são obrigatórios.
@@ -91,14 +92,21 @@ Você é um arquiteto de software especialista em Clean Architecture e Clean Cod
     - Injete as dependências manualmente ou via container no arquivo de rotas.
 
 ## Regras de Negócio Específicas:
-- **Regra de Avaliação:** Um atleta só pode ser avaliado se o status da Partida for 'FINISHED' e se ele estiver na lista de 'CONFIRMED_PRESENCE'.
-- **Regra de Sorteio:** O sorteio de times deve priorizar o equilíbrio do 'Overall' técnico antes da posição dos jogadores.
-- **Regra de Pagamento:** Atletas avulsos só podem ser confirmados na partida após o status do pagamento ser 'PAID'.
+- **Regra de Avaliação:** Na primeira vez que o atleta acessar o app, ele deverá responder um questionário de autoavaliação técnica, responderá qual o seu nível de futebol (se foi profissional, se jogou em varzea, se participou de competições), também responderá os atributos técnicos (Pace, Shooting, Passing, Dribbling, Defense, Physical) para calcular seu 'Overall' inicial. A avaliação do nível de futebol (questionário) servirá como um peso para diferenciar o profissional do amador. O 'Overall' é atualizado após cada partida com base na performance avaliada pelos outros jogadores.
+Um atleta só pode ser avaliado se o status da Partida for 'FINISHED' e se ele estiver na lista de 'CONFIRMED_PRESENCE'.
+
+Weighted Overall: Implementar calculateWeightedOverall(). Profissionais recebem peso 1.2, Amadores 1.0, Casuais 0.8 sobre a média dos atributos.
+
+- **Regra para confirmar presença:** O atleta mensalista tem prioridade sobre o avulso. O atleta mensalista pode confirmar a sua presença até 30 minutos antes do início da partida. Após esse período, o sistema deve liberar as vagas para os atletas avulsos, seguindo a ordem de chegada (first-come, first-served). Os atletas (mensalistas ou avulsos) não podem confirmar presença se tiverem pendências financeiras (status de pagamento = 'PENDING') ou se estiverem machucados (isInjured).
+- **Regra de Sorteio:** O sorteio de times deve priorizar o equilíbrio do 'Overall' técnico antes da posição dos jogadores. 
+- **Regra de Pagamento:** Atletas mensais pagam para o administrador do grupo todo mês em data pré-definida. Atletas avulsos pagam um valor determinado pelo administrador. O administrador deverá confirmar o pagamento, mundando o status do pagamento para 'PAID'. 
 - **Regra de Stats:** O 'Overall' de um atleta é a média aritmética ponderada de seus atributos técnicos, onde 'Pace' e 'Defense' têm pesos diferentes conforme a posição.
 
-- **Disponibilidade Multi-Agenda:**
+- **Disponibilidade Multi-Agenda:** Atletas avulsos podem definir múltiplos períodos de disponibilidade para jogos, e o sistema deve considerar todos esses períodos ao filtrar atletas para partidas futuras.
 
-Atletas (mesmo fixos em grupos) podem cadastrar múltiplos slots de disponibilidade (dia da semana e intervalos de horário) para jogos avulsos.
+- **Grupos:** Um atleta poderá criar um grupo, se tornando administrador, ou participar de grupos já existentes. O administrador do grupo tem controle total sobre as partidas do grupo, podendo criar, editar e excluir partidas, além de gerenciar os membros do grupo (aceitar ou remover atletas). Os membros do grupo podem visualizar as partidas criadas pelo administrador e confirmar presença, mas não têm permissão para editar ou excluir partidas. O sistema deve garantir que apenas o administrador do grupo possa realizar ações de gerenciamento, enquanto os membros têm acesso limitado às funcionalidades de visualização e confirmação de presença. O administrador do grupo é responsável por definir a quantidade de vagas, posições necessárias e critérios de seleção dos atletas. O sistema deve permitir que o administrador do grupo abra vagas para atletas avulsos caso os mensalistas não preencham todas as vagas disponíveis, seguindo a ordem de chegada (first-come, first-served).
+
+- **Matchmaking e Balanceamento de Times:** O sistema deve implementar um algoritmo de matchmaking que priorize o equilíbrio técnico dos times com base no 'Overall' dos jogadores, seguido pela posição. O algoritmo deve considerar as preferências de posição dos jogadores e tentar alocar jogadores em suas posições preferidas, mas sem comprometer o equilíbrio geral dos times. O sistema deve permitir que o administrador do grupo configure regras específicas para o matchmaking, como a necessidade de um goleiro e o nível dos atletas avulsos 'Overall'.
 
 - **Marketplace de Vagas e Geofencing:**
 
@@ -134,6 +142,8 @@ O sistema deve calcular e reter um percentual de comissão sobre o valor pago ao
 
 O sistema deve suportar a exibição de anúncios (Banners/Links) que podem ser segmentados pela localização geográfica do atleta ou perfil técnico
 
+- **Quadras Parceiras:** O sistema deve permitir que quadras de futebol se cadastrem como parceiros, oferecendo descontos ou benefícios para os atletas que utilizarem seus serviços, incentivando parcerias locais e promovendo o engajamento da comunidade. As quadras parceiras podem ser destacadas no aplicativo, e os atletas podem acessar informações sobre as quadras, como localização, avaliações e ofertas especiais. Caso uma quadra parceira esteja com quadras disponíveis para aluguel, o sistema pode sugerir aos atletas a opção de reservar diretamente pela plataforma, integrando o processo de reserva e pagamento.
+
 ### Regras de Negócio Avançadas:
 
 #### **Geofencing:**
@@ -161,5 +171,5 @@ O sistema deve suportar a exibição de anúncios (Banners/Links) que podem ser 
 #### **Check-in:**
 - **Janela de Check-in:** Disponível de 30 minutos **antes** até o horário exato da partida (match.date).
 - **Validação:** `Match.canCheckIn(currentTime)` retorna `true` apenas nesta janela.
-- **Consequência da Ausência:** Se nenhum check-in até 5 minutos do início, Use Case `AutoOpenVacanciesUseCase` dispara automaticamente abertura de vagas para avulsos.
+- **Consequência da Ausência:** Se nenhum check-in até 30 minutos do início, Use Case `AutoOpenVacanciesUseCase` dispara automaticamente abertura de vagas para avulsos.
 - **Notificação:** Sistema notifica Admin para considerar bloqueio do atleta em futuras partidas.

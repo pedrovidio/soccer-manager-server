@@ -35,7 +35,6 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     // "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
@@ -47,5 +46,6 @@
     "experimentalEsm": true,
     "moduleResolution": "nodenext",
     "transpileOnly": true
-  }
+  },
+  "exclude": ["prisma"]
 }

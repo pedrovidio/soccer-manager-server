@@ -1,37 +1,26 @@
 import { z } from 'zod';
 
 export const CreateAthleteRequestDTO = z.object({
-  nome: z.string().min(1, 'O nome do atleta é obrigatório.'),
-  email: z.string().email('E-mail deve ter um formato válido.'),
+  name: z.string().min(1, 'Athlete name is required.'),
+  email: z.string().email('Email must have a valid format.'),
   cpf: z.string()
     .transform((val) => val.replace(/\D/g, ''))
-    .refine((val) => val.length === 11, 'CPF deve conter exatamente 11 dígitos.'),
-  telefone: z.string().regex(/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$|^\d{10,11}$/, 'Telefone deve estar em um formato válido.'),
-  posicao: z.string().min(1, 'A posição do atleta é obrigatória.'),
-  idade: z.number().min(16, 'Idade deve ser no mínimo 16.').max(50, 'Idade deve ser no máximo 50.'),
-  sexo: z.enum(['M', 'F']).refine((val) => ['M', 'F'].includes(val), 'Sexo deve ser M ou F.'),
+    .refine((val) => val.length === 11, 'CPF must contain exactly 11 digits.'),
+  phone: z.string().regex(/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$|^\d{10,11}$/, 'Phone must be in a valid format.'),
+  age: z.number().min(16, 'Age must be at least 16.').max(99, 'Age must be at most 99.'),
+  gender: z.enum(['M', 'F']),
   address: z.object({
-    cep: z.string().min(1, 'CEP é obrigatório.'),
-    logradouro: z.string().min(1, 'Logradouro é obrigatório.'),
-    numero: z.string().min(1, 'Número é obrigatório.'),
-    complemento: z.string().optional(),
-    bairro: z.string().min(1, 'Bairro é obrigatório.'),
-    cidade: z.string().min(1, 'Cidade é obrigatória.'),
-    uf: z.string().length(2, 'UF deve ter exatamente 2 caracteres.').toUpperCase(),
-  }),
-  stats: z.object({
-    velocidade: z.number().min(0, 'Velocidade deve ser no mínimo 0.').max(100, 'Velocidade deve ser no máximo 100.'),
-    resistencia: z.number().min(0, 'Resistência deve ser no mínimo 0.').max(100, 'Resistência deve ser no máximo 100.'),
-    forca: z.number().min(0, 'Força deve ser no mínimo 0.').max(100, 'Força deve ser no máximo 100.'),
-    passe: z.number().min(0, 'Passe deve ser no mínimo 0.').max(100, 'Passe deve ser no máximo 100.'),
-    chute: z.number().min(0, 'Chute deve ser no mínimo 0.').max(100, 'Chute deve ser no máximo 100.'),
-    defesa: z.number().min(0, 'Defesa deve ser no mínimo 0.').max(100, 'Defesa deve ser no máximo 100.'),
-    drible: z.number().min(0, 'Drible deve ser no mínimo 0.').max(100, 'Drible deve ser no máximo 100.'),
+    cep: z.string().min(1, 'CEP is required.'),
+    street: z.string().min(1, 'Street is required.'),
+    number: z.string().min(1, 'Number is required.'),
+    complement: z.string().optional().transform(v => v ?? undefined),
+    neighborhood: z.string().min(1, 'Neighborhood is required.'),
+    city: z.string().min(1, 'City is required.'),
+    state: z.string().length(2, 'State must have exactly 2 characters.').toUpperCase(),
   }),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   isGoalkeeperForHire: z.boolean().default(false),
-  pixKey: z.string().optional(),
 });
 
 export type CreateAthleteRequest = z.infer<typeof CreateAthleteRequestDTO>;

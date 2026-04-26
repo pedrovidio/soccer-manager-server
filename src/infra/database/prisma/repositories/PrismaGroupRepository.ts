@@ -21,30 +21,20 @@ export class PrismaGroupRepository implements IGroupRepository {
       where: { id },
     });
 
-    return raw ? PrismaGroupMapper.toDomain(raw) : null;
+    return raw ? PrismaGroupMapper.toDomain(raw as any) : null;
   }
 
   async listByAdmin(adminId: string): Promise<Group[]> {
     const results = await this.prisma.group.findMany({
-      where: {
-        adminIds: {
-          has: adminId,
-        },
-      },
+      where: { adminIds: { has: adminId } },
     });
-
-    return results.map(PrismaGroupMapper.toDomain);
+    return results.map((raw) => PrismaGroupMapper.toDomain(raw as any));
   }
 
   async listByMember(athleteId: string): Promise<Group[]> {
     const results = await this.prisma.group.findMany({
-      where: {
-        memberIds: {
-          has: athleteId,
-        },
-      },
+      where: { memberIds: { has: athleteId } },
     });
-
-    return results.map(PrismaGroupMapper.toDomain);
+    return results.map((raw) => PrismaGroupMapper.toDomain(raw as any));
   }
 }

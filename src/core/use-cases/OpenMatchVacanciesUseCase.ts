@@ -10,7 +10,7 @@ export interface OpenMatchVacanciesInput {
 
 export interface AthleteRecruitmentData {
   id: string;
-  nome: string;
+  name: string;
   distanceInKm?: number;
 }
 
@@ -53,7 +53,7 @@ export class OpenMatchVacanciesUseCase {
     // 5. Retornar dados básicos para notificação
     return availableAthletes.map(athlete => ({
       id: athlete.id,
-      nome: athlete.nome,
+      name: athlete.name,
       distanceInKm: this.calculateDistance(
         match.latitude,
         match.longitude,

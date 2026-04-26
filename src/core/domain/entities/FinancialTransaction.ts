@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { BusinessRuleViolationError } from '../errors/BusinessRuleViolationError.js';
 
 export enum TransactionType {
   GOALKEEPER_SERVICE = 'GOALKEEPER_SERVICE',
@@ -44,10 +45,10 @@ export class FinancialTransaction {
     this.dueDate = dueDate;
 
     // Validações
-    if (amount <= 0) throw new Error('Amount must be positive');
-    if (platformFee < 0) throw new Error('Platform fee cannot be negative');
+    if (amount <= 0) throw new BusinessRuleViolationError('Amount must be positive');
+    if (platformFee < 0) throw new BusinessRuleViolationError('Platform fee cannot be negative');
     if ((type === TransactionType.SPOT || type === TransactionType.MONTHLY) && !dueDate) {
-      throw new Error('Due date is required for SPOT and MONTHLY transactions');
+      throw new BusinessRuleViolationError('Due date is required for SPOT and MONTHLY transactions');
     }
   }
 }

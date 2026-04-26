@@ -1,131 +1,110 @@
-import { Athlete, Address, Stats } from '../../../../core/domain/entities/Athlete.js';
-
-interface AthleteCreateInput {
-  id?: string;
-  nome: string;
-  cpf: string;
-  email: string;
-  telefone: string;
-  enderecoCep: string;
-  enderecoLogradouro: string;
-  enderecoNumero: string;
-  enderecoComplemento?: string | null;
-  enderecoBairro: string;
-  enderecoCidade: string;
-  enderecoUf: string;
-  idade: number;
-  sexo: string;
-  posicao: string;
-  statsVelocidade: number;
-  statsResistencia: number;
-  statsForca: number;
-  statsPasse: number;
-  statsChute: number;
-  statsDefesa: number;
-  statsDrible: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  isGoalkeeperForHire?: boolean;
-  pixKey?: string | null;
-}
+import { Athlete, Address, Stats, FootballLevel } from '../../../../core/domain/entities/Athlete.js';
 
 interface PrismaAthlete {
   id: string;
-  nome: string;
+  name: string;
   cpf: string;
   email: string;
-  telefone: string;
-  enderecoCep: string;
-  enderecoLogradouro: string;
-  enderecoNumero: string;
-  enderecoComplemento: string | null;
-  enderecoBairro: string;
-  enderecoCidade: string;
-  enderecoUf: string;
-  idade: number;
-  sexo: string;
-  posicao: string;
-  statsVelocidade: number;
-  statsResistencia: number;
-  statsForca: number;
-  statsPasse: number;
-  statsChute: number;
-  statsDefesa: number;
-  statsDrible: number;
+  phone: string;
+  addressCep: string;
+  addressStreet: string;
+  addressNumber: string;
+  addressComplement: string | null;
+  addressNeighborhood: string;
+  addressCity: string;
+  addressState: string;
+  age: number;
+  gender: string;
+  position: string;
+  footballLevel: string;
+  statsPace: number;
+  statsShooting: number;
+  statsPassing: number;
+  statsDribbling: number;
+  statsDefense: number;
+  statsPhysical: number;
   latitude: number | null;
   longitude: number | null;
   isGoalkeeperForHire: boolean;
+  isInjured: boolean;
+  financialDebt: number;
+  hasCompletedAssessment: boolean;
   pixKey: string | null;
 }
 
 export class PrismaAthleteMapper {
-  static toPersistence(athlete: Athlete): AthleteCreateInput {
+  static toPersistence(athlete: Athlete): Omit<PrismaAthlete, 'pixKey'> & { pixKey: string | null } {
+    const stats = athlete.getStats();
     return {
       id: athlete.id,
-      nome: athlete.nome,
+      name: athlete.name,
       cpf: athlete.cpf,
       email: athlete.email,
-      telefone: athlete.telefone,
-      enderecoCep: athlete.endereco.cep,
-      enderecoLogradouro: athlete.endereco.logradouro,
-      enderecoNumero: athlete.endereco.numero,
-      enderecoComplemento: athlete.endereco.complemento || null,
-      enderecoBairro: athlete.endereco.bairro,
-      enderecoCidade: athlete.endereco.cidade,
-      enderecoUf: athlete.endereco.uf,
-      idade: athlete.idade,
-      sexo: athlete.sexo,
-      posicao: athlete.posicao,
-      statsVelocidade: athlete.stats.velocidade,
-      statsResistencia: athlete.stats.resistencia,
-      statsForca: athlete.stats.forca,
-      statsPasse: athlete.stats.passe,
-      statsChute: athlete.stats.chute,
-      statsDefesa: athlete.stats.defesa,
-      statsDrible: athlete.stats.drible,
-      latitude: athlete.latitude || null,
-      longitude: athlete.longitude || null,
+      phone: athlete.phone,
+      addressCep: athlete.address.cep,
+      addressStreet: athlete.address.street,
+      addressNumber: athlete.address.number,
+      addressComplement: athlete.address.complement ?? null,
+      addressNeighborhood: athlete.address.neighborhood,
+      addressCity: athlete.address.city,
+      addressState: athlete.address.state,
+      age: athlete.age,
+      gender: athlete.gender,
+      position: athlete.position,
+      footballLevel: athlete.footballLevel,
+      statsPace: stats.pace,
+      statsShooting: stats.shooting,
+      statsPassing: stats.passing,
+      statsDribbling: stats.dribbling,
+      statsDefense: stats.defense,
+      statsPhysical: stats.physical,
+      latitude: athlete.latitude ?? null,
+      longitude: athlete.longitude ?? null,
       isGoalkeeperForHire: athlete.isGoalkeeperForHire,
-      pixKey: athlete.pixKey || null,
+      isInjured: athlete.isInjured,
+      financialDebt: athlete.financialDebt,
+      hasCompletedAssessment: athlete.hasCompletedAssessment,
+      pixKey: null,
     };
   }
 
   static toDomain(raw: PrismaAthlete): Athlete {
     const address: Address = {
-      cep: raw.enderecoCep,
-      logradouro: raw.enderecoLogradouro,
-      numero: raw.enderecoNumero,
-      complemento: raw.enderecoComplemento || undefined,
-      bairro: raw.enderecoBairro,
-      cidade: raw.enderecoCidade,
-      uf: raw.enderecoUf,
+      cep: raw.addressCep,
+      street: raw.addressStreet,
+      number: raw.addressNumber,
+      complement: raw.addressComplement ?? undefined,      neighborhood: raw.addressNeighborhood,
+      city: raw.addressCity,
+      state: raw.addressState,
     };
 
     const stats: Stats = {
-      velocidade: raw.statsVelocidade,
-      resistencia: raw.statsResistencia,
-      forca: raw.statsForca,
-      passe: raw.statsPasse,
-      chute: raw.statsChute,
-      defesa: raw.statsDefesa,
-      drible: raw.statsDrible,
+      pace: raw.statsPace,
+      shooting: raw.statsShooting,
+      passing: raw.statsPassing,
+      dribbling: raw.statsDribbling,
+      defense: raw.statsDefense,
+      physical: raw.statsPhysical,
     };
 
     return new Athlete(
-      raw.nome,
+      raw.name,
       raw.cpf,
       raw.email,
-      raw.telefone,
+      raw.phone,
       address,
-      raw.idade,
-      raw.sexo as 'M' | 'F',
-      raw.posicao,
+      raw.age,
+      raw.gender as 'M' | 'F',
+      raw.position,
       stats,
+      raw.footballLevel as FootballLevel,
       raw.id,
-      raw.latitude || undefined,
-      raw.longitude || undefined,
+      raw.latitude ?? undefined,
+      raw.longitude ?? undefined,
       raw.isGoalkeeperForHire,
-      raw.pixKey || undefined
+      raw.isInjured,
+      raw.financialDebt,
+      raw.hasCompletedAssessment,
     );
   }
 }
