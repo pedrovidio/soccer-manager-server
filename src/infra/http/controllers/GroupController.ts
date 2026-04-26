@@ -38,9 +38,10 @@ export class GroupController {
       const result = await useCase.execute({
         adminId: data.adminId,
         name: data.name,
-        ...(data.description  !== undefined && { description:  data.description }),
-        ...(data.pixKey       !== undefined && { pixKey:       data.pixKey }),
-        ...(data.baseLocation !== undefined && { baseLocation: data.baseLocation }),
+        ...(data.description          !== undefined && { description:          data.description }),
+        ...(data.pixKey               !== undefined && { pixKey:               data.pixKey }),
+        ...(data.baseLocation         !== undefined && { baseLocation:         data.baseLocation }),
+        ...(data.goalkeeperPaymentMode !== undefined && { goalkeeperPaymentMode: data.goalkeeperPaymentMode }),
       });
       res.status(201).json(result);
     } catch (error) {

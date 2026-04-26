@@ -6,6 +6,14 @@ export enum GroupStatus {
   INACTIVE = 'INACTIVE',
 }
 
+/**
+ * Define como o goleiro fixo do grupo (não contratado) participa financeiramente.
+ * SPLIT   — entra na divisão do custo da partida como qualquer outro jogador.
+ * MONTHLY — paga mensalidade normalmente.
+ * FREE    — isento de pagamento (benefício do grupo).
+ */
+export type GoalkeeperPaymentMode = 'SPLIT' | 'MONTHLY' | 'FREE';
+
 export class Group {
   public readonly id: string;
   public name: string;
@@ -16,6 +24,7 @@ export class Group {
   public memberIds: string[];
   public baseLocation: { latitude: number; longitude: number } | undefined;
   public status: GroupStatus;
+  public goalkeeperPaymentMode: GoalkeeperPaymentMode;
 
   constructor(
     name: string,
@@ -27,6 +36,7 @@ export class Group {
     id?: string,
     description?: string,
     photoUrl?: string,
+    goalkeeperPaymentMode: GoalkeeperPaymentMode = 'SPLIT',
   ) {
     this.validateName(name);
 
@@ -39,6 +49,7 @@ export class Group {
     this.pixKey = pixKey;
     this.baseLocation = baseLocation;
     this.photoUrl = photoUrl;
+    this.goalkeeperPaymentMode = goalkeeperPaymentMode;
   }
 
   private validateName(name: string): void {

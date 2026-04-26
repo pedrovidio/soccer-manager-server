@@ -9,6 +9,7 @@ export const CreateGroupRequestDTO = z.object({
     latitude: z.number(),
     longitude: z.number(),
   }).optional(),
+  goalkeeperPaymentMode: z.enum(['SPLIT', 'MONTHLY', 'FREE']).optional(),
 });
 
 export const AddMemberRequestDTO = z.object({

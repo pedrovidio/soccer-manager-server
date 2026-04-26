@@ -1,4 +1,4 @@
-import { Group, GroupStatus } from '../../../../core/domain/entities/Group.js';
+import { Group, GroupStatus, GoalkeeperPaymentMode } from '../../../../core/domain/entities/Group.js';
 
 interface PrismaGroupRaw {
   id: string;
@@ -11,6 +11,7 @@ interface PrismaGroupRaw {
   pixKey: string | null;
   photoUrl: string | null;
   status: string;
+  goalkeeperPaymentMode: string;
 }
 
 export class PrismaGroupMapper {
@@ -30,6 +31,7 @@ export class PrismaGroupMapper {
       raw.id,
       raw.description ?? undefined,
       raw.photoUrl ?? undefined,
+      raw.goalkeeperPaymentMode as GoalkeeperPaymentMode,
     );
   }
 
@@ -45,6 +47,7 @@ export class PrismaGroupMapper {
       pixKey: group.pixKey ?? null,
       photoUrl: group.photoUrl ?? null,
       status: group.status,
+      goalkeeperPaymentMode: group.goalkeeperPaymentMode,
     };
   }
 }
