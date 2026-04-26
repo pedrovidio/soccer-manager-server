@@ -65,6 +65,23 @@ enum NotificationType {
   SYSTEM
 }
 
+enum VenueOwnerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CourtAvailabilityStatus {
+  OPEN
+  BOOKED
+  CANCELLED
+}
+
+enum MatchCreatorType {
+  VENUE_OWNER
+  GROUP_ADMIN
+}
+
 enum YearsPlaying {
   LESS_THAN_2
   TWO_TO_5
@@ -222,6 +239,7 @@ model Match {
   financialTransactions FinancialTransaction[]
   invites               MatchInvite[]
   ratings               PerformanceRating[]
+  score                 MatchScore?
 
   @@map("matches")
 }
@@ -286,6 +304,18 @@ model Notification {
   @@map("notifications")
 }
 
+model MatchScore {
+  id        String   @id @default(uuid()) @map("id")
+  matchId   String   @unique @map("match_id")
+  registeredBy String @map("registered_by")
+  scores    Json     @map("scores")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@map("match_scores")
+}
+
 model GroupAdminDelegation {
   id              String    @id @default(uuid()) @map("id")
   groupId         String    @map("group_id")
@@ -314,4 +344,94 @@ model Ad {
   active      Boolean @default(true) @map("active")
 
   @@map("ads")
+}
+
+model SuperAdmin {
+  id           String  @id @default(uuid()) @map("id")
+  email        String  @unique @map("email")
+  passwordHash String  @map("password_hash")
+  pixKey       String? @map("pix_key")
+  asaasWalletId String? @map("asaas_wallet_id")
+  commissionRate Float  @default(0.1) @map("commission_rate")
+
+  @@map("super_admins")
+}
+
+model VenueOwner {
+  id             String          @id @default(uuid()) @map("id")
+  name           String          @map("name")
+  email          String          @unique @map("email")
+  phone          String          @map("phone")
+  cpfCnpj        String          @unique @map("cpf_cnpj")
+  passwordHash   String          @map("password_hash")
+  status         VenueOwnerStatus @default(PENDING) @map("status")
+  asaasWalletId  String?         @map("asaas_wallet_id")
+  pixKey         String?         @map("pix_key")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  venues Venue[]
+
+  @@map("venue_owners")
+}
+
+model Venue {
+  id           String  @id @default(uuid()) @map("id")
+  venueOwnerId String  @map("venue_owner_id")
+  name         String  @map("name")
+  address      String  @map("address")
+  latitude     Float   @map("latitude")
+  longitude    Float   @map("longitude")
+  photoUrl     String? @map("photo_url")
+
+  venueOwner VenueOwner @relation(fields: [venueOwnerId], references: [id], onDelete: Cascade)
+  courts     Court[]
+
+  @@map("venues")
+}
+
+model Court {
+  id           String    @id @default(uuid()) @map("id")
+  venueId      String    @map("venue_id")
+  name         String    @map("name")
+  type         MatchType @map("type")
+  isCovered    Boolean   @default(false) @map("is_covered")
+  rentalPrice  Float     @map("rental_price")
+
+  venue         Venue              @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  availabilities CourtAvailability[]
+  matchRecords   MatchVenueRecord[]
+
+  @@map("courts")
+}
+
+model CourtAvailability {
+  id        String                @id @default(uuid()) @map("id")
+  courtId   String                @map("court_id")
+  date      DateTime              @map("date")
+  startTime String                @map("start_time")
+  endTime   String                @map("end_time")
+  status    CourtAvailabilityStatus @default(OPEN) @map("status")
+  inviteSpotAthletes Boolean      @default(false) @map("invite_spot_athletes")
+  createdAt DateTime              @default(now()) @map("created_at")
+
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@map("court_availabilities")
+}
+
+model MatchVenueRecord {
+  id              String           @id @default(uuid()) @map("id")
+  matchId         String           @map("match_id")
+  courtId         String           @map("court_id")
+  venueOwnerId    String           @map("venue_owner_id")
+  createdByType   MatchCreatorType @map("created_by_type")
+  createdById     String           @map("created_by_id")
+  rentalPrice     Float            @map("rental_price")
+  commissionRate  Float            @map("commission_rate")
+  commissionAmount Float           @map("commission_amount")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  court Court @relation(fields: [courtId], references: [id])
+
+  @@map("match_venue_records")
 }

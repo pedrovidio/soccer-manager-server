@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 
 export interface AuthPayload {
   sub: string;
-  name: string;
+  name?: string;
+  role?: 'super_admin' | 'venue_owner';
 }
 
 declare global {
