@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-export type NotificationType = 'GROUP_INVITE' | 'INVITE_ACCEPTED' | 'INVITE_DECLINED' | 'SYSTEM';
+export type NotificationType = 'GROUP_INVITE' | 'INVITE_ACCEPTED' | 'INVITE_DECLINED' | 'MATCH_INVITE' | 'MATCH_INVITE_ACCEPTED' | 'MATCH_INVITE_DECLINED' | 'SYSTEM';
 
 export class Notification {
   public readonly id: string;

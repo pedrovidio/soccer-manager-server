@@ -1,79 +1,96 @@
-import { IAthleteRepository } from '../domain/repositories/IAthleteRepository.js';
+import { MatchInvite } from '../domain/entities/MatchInvite.js';
+import { Notification } from '../domain/entities/Notification.js';
 import { IMatchRepository } from '../domain/repositories/IMatchRepository.js';
-import { CheckAthleteDebtStatusUseCase } from './CheckAthleteDebtStatusUseCase.js';
+import { IMatchInviteRepository } from '../domain/repositories/IMatchInviteRepository.js';
+import { IGroupRepository } from '../domain/repositories/IGroupRepository.js';
+import { IAthleteRepository } from '../domain/repositories/IAthleteRepository.js';
+import { INotificationRepository } from '../domain/repositories/INotificationRepository.js';
+import { IWhatsAppService } from '../domain/services/IWhatsAppService.js';
 import { EntityNotFoundError } from '../domain/errors/EntityNotFoundError.js';
+import { BusinessRuleViolationError } from '../domain/errors/BusinessRuleViolationError.js';
 
 export interface OpenMatchVacanciesInput {
+  adminId: string;
   matchId: string;
-  radiusInKm: number;
 }
 
-export interface AthleteRecruitmentData {
-  id: string;
-  name: string;
-  distanceInKm?: number;
+export interface OpenMatchVacanciesOutput {
+  spotInvitesSent: number;
+  vacanciesNeeded: number;
 }
 
 export class OpenMatchVacanciesUseCase {
   constructor(
-    private athleteRepository: IAthleteRepository,
     private matchRepository: IMatchRepository,
-    private checkDebtUseCase: CheckAthleteDebtStatusUseCase
+    private matchInviteRepository: IMatchInviteRepository,
+    private groupRepository: IGroupRepository,
+    private athleteRepository: IAthleteRepository,
+    private notificationRepository: INotificationRepository,
+    private whatsAppService: IWhatsAppService,
   ) {}
 
-  async execute(input: OpenMatchVacanciesInput): Promise<AthleteRecruitmentData[]> {
-    // 1. Buscar a partida (Fail Fast)
-    const match = await this.matchRepository.findById(input.matchId);
-    if (!match) {
-      throw new EntityNotFoundError('Match', input.matchId);
+  async execute(input: OpenMatchVacanciesInput): Promise<OpenMatchVacanciesOutput> {
+    const { adminId, matchId } = input;
+
+    const match = await this.matchRepository.findById(matchId);
+    if (!match) throw new EntityNotFoundError('Match', matchId);
+
+    const group = await this.groupRepository.findById(match.groupId);
+    if (!group) throw new EntityNotFoundError('Group', match.groupId);
+
+    if (!group.isAdmin(adminId)) {
+      throw new BusinessRuleViolationError('Only administrators can open vacancies for spot athletes');
     }
 
-    // 2. Extrair critérios da partida
-    const filters = {
-      latitude: match.latitude,
-      longitude: match.longitude,
-      radiusInKm: input.radiusInKm,
+    if (!match.needsSpotRecruitment()) {
+      throw new BusinessRuleViolationError('Match already has enough confirmed players');
+    }
+
+    const vacanciesNeeded = match.totalVacancies - match.confirmedIds.length;
+
+    const nearbyAthletes = await this.athleteRepository.findNearby({
+      latitude:   match.latitude,
+      longitude:  match.longitude,
+      radiusInKm: match.spotRadiusKm,
       minOverall: match.minOverall,
-      minAge: match.minAge,
-      maxAge: match.maxAge,
-    };
+      minAge:     match.minAge,
+      maxAge:     match.maxAge,
+    });
 
-    // 3. Buscar atletas próximos com critérios
-    const nearbyAthletes = await this.athleteRepository.findNearby(filters);
+    // Exclude athletes already invited or confirmed
+    const existingInvites = await this.matchInviteRepository.findByMatch(matchId);
+    const alreadyInvitedIds = new Set(existingInvites.map((i) => i.athleteId));
+    const groupMemberIds    = new Set([...group.adminIds, ...group.memberIds]);
 
-    // 4. Filtrar por inadimplência
-    const availableAthletes = [];
-    for (const athlete of nearbyAthletes) {
-      const hasDebt = await this.checkDebtUseCase.execute(athlete.id);
-      if (!hasDebt) {
-        availableAthletes.push(athlete);
-      }
+    const candidates = nearbyAthletes.filter(
+      (a) => !alreadyInvitedIds.has(a.id) && !groupMemberIds.has(a.id),
+    );
+
+    const typeLabel = { CAMPO: 'Campo', SOCIETY: 'Society', FUTSAL: 'Futsal' }[match.type];
+    const dateStr   = match.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    let spotInvitesSent = 0;
+
+    for (const athlete of candidates) {
+      const invite = new MatchInvite(match.id, athlete.id, 'SPOT');
+      await this.matchInviteRepository.save(invite);
+
+      await this.notificationRepository.save(new Notification(
+        athlete.id,
+        'MATCH_INVITE',
+        `Vaga disponível: jogo de ${typeLabel}`,
+        `Há uma vaga para o jogo de ${typeLabel} em ${match.location} no dia ${dateStr}. Aceite rápido, é por ordem de chegada!`,
+        invite.id,
+      ));
+
+      await this.whatsAppService.sendMessage(
+        athlete.phone,
+        `⚽ Olá, ${athlete.name}! Surgiu uma vaga para o jogo de ${typeLabel} em ${match.location} no dia ${dateStr}. Abra o app e aceite rápido — é por ordem de chegada!`,
+      );
+
+      spotInvitesSent++;
     }
 
-    // 5. Retornar dados básicos para notificação
-    return availableAthletes.map(athlete => ({
-      id: athlete.id,
-      name: athlete.name,
-      distanceInKm: this.calculateDistance(
-        match.latitude,
-        match.longitude,
-        athlete.latitude || 0,
-        athlete.longitude || 0
-      ),
-    }));
-  }
-
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    // Haversine formula para calcular distância entre dois pontos geográficos
-    const R = 6371; // Raio da Terra em quilômetros
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    return Math.round(distance * 10) / 10; // Arredonda para 1 casa decimal
+    return { spotInvitesSent, vacanciesNeeded };
   }
 }

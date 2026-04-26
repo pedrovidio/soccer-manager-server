@@ -21,6 +21,7 @@ export interface IAthleteRepository {
   findByCpf(cpf: string): Promise<Athlete | null>;
   findByEmail(email: string): Promise<Athlete | null>;
   save(athlete: Athlete): Promise<void>;
+  updateLocation(athleteId: string, latitude: number, longitude: number): Promise<void>;
   findNearby(filters: FindNearbyFilters): Promise<Athlete[]>;
   search(filters: AthleteSearchFilters): Promise<Athlete[]>;
 }

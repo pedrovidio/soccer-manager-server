@@ -2,67 +2,70 @@ import { randomUUID } from 'crypto';
 import { BusinessRuleViolationError } from '../errors/BusinessRuleViolationError.js';
 
 export enum MatchStatus {
-  SCHEDULED = 'SCHEDULED',
+  SCHEDULED   = 'SCHEDULED',
   IN_PROGRESS = 'IN_PROGRESS',
-  FINISHED = 'FINISHED',
-  CANCELLED = 'CANCELLED',
+  FINISHED    = 'FINISHED',
+  CANCELLED   = 'CANCELLED',
 }
 
-export enum AthleteMatchStatus {
-  CONFIRMED_PRESENCE = 'CONFIRMED_PRESENCE',
-  CHECKED_IN = 'CHECKED_IN',
-}
+export type MatchType = 'CAMPO' | 'SOCIETY' | 'FUTSAL';
 
 export class Match {
   public readonly id: string;
-  public groupId: string;
-  public date: Date;
-  public latitude: number;
-  public longitude: number;
-  public vacanciesOpen: number;
-  public minOverall: number;
-  public minAge: number;
-  public maxAge: number;
+  public readonly groupId: string;
+  public readonly type: MatchType;
+  public readonly date: Date;
+  public readonly location: string;
+  public readonly latitude: number;
+  public readonly longitude: number;
+  public readonly totalVacancies: number;
+  public readonly reserveVacancies: number;
+  public readonly spotRadiusKm: number;
+  public readonly minOverall: number;
+  public readonly minAge: number;
+  public readonly maxAge: number;
+  public confirmedIds: string[];
+  public checkedInIds: string[];
   public status: MatchStatus;
-  public confirmedPresence: string[] = [];
-  public athleteStatuses: Map<string, AthleteMatchStatus> = new Map();
 
   constructor(
     groupId: string,
+    type: MatchType,
     date: Date,
+    location: string,
     latitude: number,
     longitude: number,
-    vacanciesOpen: number,
-    minOverall: number,
-    minAge: number,
-    maxAge: number,
+    totalVacancies: number,
+    reserveVacancies: number = 0,
+    spotRadiusKm: number = 10,
+    minOverall: number = 0,
+    minAge: number = 16,
+    maxAge: number = 99,
+    confirmedIds: string[] = [],
+    checkedInIds: string[] = [],
     status: MatchStatus = MatchStatus.SCHEDULED,
-    id?: string
+    id?: string,
   ) {
-    this.validateBusinessRules(minAge, maxAge, vacanciesOpen, minOverall);
+    if (minAge > maxAge) throw new BusinessRuleViolationError('Minimum age cannot be greater than maximum age');
+    if (totalVacancies < 1) throw new BusinessRuleViolationError('Total vacancies must be at least 1');
+    if (reserveVacancies < 0) throw new BusinessRuleViolationError('Reserve vacancies cannot be negative');
 
-    this.id = id ?? randomUUID();
-    this.groupId = groupId;
-    this.date = date;
-    this.latitude = latitude;
-    this.longitude = longitude;
-    this.vacanciesOpen = vacanciesOpen;
-    this.minOverall = minOverall;
-    this.minAge = minAge;
-    this.maxAge = maxAge;
-    this.status = status;
-  }
-
-  private validateBusinessRules(minAge: number, maxAge: number, vacanciesOpen: number, minOverall: number): void {
-    if (minAge > maxAge) {
-      throw new BusinessRuleViolationError('Minimum age cannot be greater than maximum age');
-    }
-    if (vacanciesOpen < 0) {
-      throw new BusinessRuleViolationError('Vacancies open cannot be negative');
-    }
-    if (minOverall < 0) {
-      throw new BusinessRuleViolationError('Minimum overall cannot be negative');
-    }
+    this.id               = id ?? randomUUID();
+    this.groupId          = groupId;
+    this.type             = type;
+    this.date             = date;
+    this.location         = location;
+    this.latitude         = latitude;
+    this.longitude        = longitude;
+    this.totalVacancies   = totalVacancies;
+    this.reserveVacancies = reserveVacancies;
+    this.spotRadiusKm     = spotRadiusKm;
+    this.minOverall       = minOverall;
+    this.minAge           = minAge;
+    this.maxAge           = maxAge;
+    this.confirmedIds     = [...confirmedIds];
+    this.checkedInIds     = [...checkedInIds];
+    this.status           = status;
   }
 
   public canCheckIn(currentTime: Date): boolean {
@@ -70,37 +73,40 @@ export class Match {
     return currentTime >= thirtyMinutesBefore && currentTime <= this.date;
   }
 
+  public canConfirmPresence(currentTime: Date): boolean {
+    const thirtyMinutesBefore = new Date(this.date.getTime() - 30 * 60 * 1000);
+    return currentTime < thirtyMinutesBefore && this.status === MatchStatus.SCHEDULED;
+  }
+
+  public checkIn(athleteId: string): void {
+    if (!this.confirmedIds.includes(athleteId)) {
+      throw new BusinessRuleViolationError('Athlete is not confirmed for this match');
+    }
+    if (this.checkedInIds.includes(athleteId)) return;
+    this.checkedInIds.push(athleteId);
+  }
+
+  public getConfirmedWithoutCheckIn(): string[] {
+    return this.confirmedIds.filter((id) => !this.checkedInIds.includes(id));
+  }
+
+  public confirmPresence(athleteId: string): void {
+    if (this.confirmedIds.includes(athleteId)) return;
+    const totalSlots = this.totalVacancies + this.reserveVacancies;
+    if (this.confirmedIds.length >= totalSlots) {
+      throw new BusinessRuleViolationError('No vacancies available for this match');
+    }
+    this.confirmedIds.push(athleteId);
+  }
+
+  public needsSpotRecruitment(): boolean {
+    return this.confirmedIds.length < this.totalVacancies;
+  }
+
   public finishMatch(): void {
     if (this.status !== MatchStatus.IN_PROGRESS) {
       throw new BusinessRuleViolationError('Match can only be finished if it is in progress');
     }
     this.status = MatchStatus.FINISHED;
-  }
-
-  public updateStatus(newStatus: MatchStatus): void {
-    this.status = newStatus;
-  }
-
-  public decreaseVacancies(): void {
-    if (this.vacanciesOpen > 0) {
-      this.vacanciesOpen -= 1;
-    } else {
-      throw new BusinessRuleViolationError('No vacancies available');
-    }
-  }
-
-  public confirmPresence(athleteId: string): void {
-    if (!this.confirmedPresence.includes(athleteId)) {
-      this.confirmedPresence.push(athleteId);
-      this.athleteStatuses.set(athleteId, AthleteMatchStatus.CONFIRMED_PRESENCE);
-    }
-  }
-
-  public checkIn(athleteId: string): void {
-    if (this.confirmedPresence.includes(athleteId)) {
-      this.athleteStatuses.set(athleteId, AthleteMatchStatus.CHECKED_IN);
-    } else {
-      throw new BusinessRuleViolationError('Athlete is not confirmed for this match');
-    }
   }
 }

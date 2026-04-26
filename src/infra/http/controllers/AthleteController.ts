@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { CreateAthleteRequestDTO } from '../dtos/CreateAthleteRequestDTO.js';
+import { CreateAthleteRequestDTO, UpdateLocationRequestDTO } from '../dtos/CreateAthleteRequestDTO.js';
 import { RegisterAthleteUseCase } from '../../../core/use-cases/RegisterAthleteUseCase.js';
+import { UpdateAthleteLocationUseCase } from '../../../core/use-cases/UpdateAthleteLocationUseCase.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
@@ -10,34 +11,36 @@ import { BusinessRuleViolationError } from '../../../core/domain/errors/Business
 export class AthleteController {
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const validatedData = CreateAthleteRequestDTO.parse(req.body);
-
-      const repository = new PrismaAthleteRepository();
-      const useCase = new RegisterAthleteUseCase(repository);
-
-      const athlete = await useCase.execute(validatedData);
-
+      const data = CreateAthleteRequestDTO.parse(req.body);
+      const athlete = await new RegisterAthleteUseCase(new PrismaAthleteRepository()).execute(data);
       res.status(201).json(athlete);
-    } catch (error: any) {
-      console.error('[AthleteController] Error:', error);
-      
-      if (error instanceof ZodError) {
-        const formattedErrors = (error.issues || []).map((err: any) => ({
-          field: err.path?.join('.') || 'unknown',
-          message: err.message,
-        }));
-        res.status(400).json({ errors: formattedErrors });
-      } else if (error instanceof EntityNotFoundError) {
-        res.status(404).json({ error: error.message, code: error.code });
-      } else if (error instanceof BusinessRuleViolationError) {
-        res.status(409).json({ error: error.message, code: error.code });
-      } else if (error instanceof DomainError) {
-        res.status(400).json({ error: error.message, code: error.code });
-      } else if (error?.message) {
-        res.status(500).json({ error: 'An unexpected error occurred' });
-      } else {
-        res.status(500).json({ error: 'An unexpected error occurred' });
-      }
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async updateLocation(req: Request, res: Response): Promise<void> {
+    try {
+      const athleteId = req.params['athleteId'] as string;
+      const { latitude, longitude } = UpdateLocationRequestDTO.parse(req.body);
+      await new UpdateAthleteLocationUseCase(new PrismaAthleteRepository()).execute({ athleteId, latitude, longitude });
+      res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  private handleError(error: unknown, res: Response): void {
+    if (error instanceof ZodError) {
+      res.status(400).json({ errors: error.issues.map((e) => ({ field: e.path.join('.'), message: e.message })) });
+    } else if (error instanceof EntityNotFoundError) {
+      res.status(404).json({ error: error.message, code: error.code });
+    } else if (error instanceof BusinessRuleViolationError) {
+      res.status(409).json({ error: error.message, code: error.code });
+    } else if (error instanceof DomainError) {
+      res.status(400).json({ error: error.message, code: error.code });
+    } else {
+      res.status(500).json({ error: 'An unexpected error occurred' });
     }
   }
 }

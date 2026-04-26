@@ -1,5 +1,6 @@
 import { IMatchRepository } from '../domain/repositories/IMatchRepository.js';
 import { IAthleteRepository } from '../domain/repositories/IAthleteRepository.js';
+import { IMatchInviteRepository } from '../domain/repositories/IMatchInviteRepository.js';
 import { EntityNotFoundError } from '../domain/errors/EntityNotFoundError.js';
 import { BusinessRuleViolationError } from '../domain/errors/BusinessRuleViolationError.js';
 
@@ -12,6 +13,7 @@ export class ConfirmCheckInUseCase {
   constructor(
     private matchRepository: IMatchRepository,
     private athleteRepository: IAthleteRepository,
+    private matchInviteRepository: IMatchInviteRepository,
   ) {}
 
   async execute(input: ConfirmCheckInInput): Promise<void> {
@@ -27,12 +29,8 @@ export class ConfirmCheckInUseCase {
       throw new BusinessRuleViolationError('Check-in is only available 30 minutes before the match starts');
     }
 
-    if (!match.confirmedPresence.includes(athleteId)) {
+    if (!match.confirmedIds.includes(athleteId)) {
       throw new BusinessRuleViolationError('Athlete is not confirmed for this match');
     }
-
-    match.checkIn(athleteId);
-
-    await this.matchRepository.save(match);
   }
 }
