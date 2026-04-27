@@ -1,0 +1,1 @@
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTAxNzE5Ni03YzdkLTRlYTctOGJiYS0xMzBlZTE1ZGVmZmEiLCJuYW1lIjoiUGVkcm8gSGVucmlxdWUgU2lsdmEiLCJpYXQiOjE3NzcyMzg3NTAsImV4cCI6MTc3Nzg0MzU1MH0.JZdr9uny8q0DPml_rq8M_vrMJ5lRYMW-IcL1furv4SM","athleteId":"aa017196-7c7d-4ea7-8bba-130ee15deffa","name":"Pedro Henrique Silva"}

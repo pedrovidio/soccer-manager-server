@@ -8,7 +8,7 @@ interface PrismaAthlete {
   phone: string;
   addressCep: string;
   addressStreet: string;
-  addressNumber: string;
+  addressNumber: number;
   addressComplement: string | null;
   addressNeighborhood: string;
   addressCity: string;

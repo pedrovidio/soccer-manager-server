@@ -12,7 +12,7 @@ export const CreateAthleteRequestDTO = z.object({
   address: z.object({
     cep: z.string().min(1, 'CEP is required.'),
     street: z.string().min(1, 'Street is required.'),
-    number: z.string().min(1, 'Number is required.'),
+    number: z.number().int().positive('Number must be a positive integer.'),
     complement: z.string().optional().transform(v => v ?? undefined),
     neighborhood: z.string().min(1, 'Neighborhood is required.'),
     city: z.string().min(1, 'City is required.'),

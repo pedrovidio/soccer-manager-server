@@ -26,7 +26,7 @@ function makeAthlete(overrides: Partial<{
 }> = {}): Athlete {
   return new Athlete(
     'João Silva', '12345678901', 'joao@email.com', '51987654321',
-    { cep: '90000-000', street: 'Rua A', number: '1', complement: undefined, neighborhood: 'Centro', city: 'Porto Alegre', state: 'RS' },
+    { cep: '90000-000', street: 'Rua A', number: 1, complement: undefined, neighborhood: 'Centro', city: 'Porto Alegre', state: 'RS' },
     25, 'M', overrides.position ?? 'Midfielder',
     overrides.stats ?? makeStats(),
     overrides.footballLevel ?? 'AMATEUR',
@@ -148,7 +148,7 @@ await test('creates athlete with valid data', () => {
 await test('rejects empty name', () => {
   assertThrows(() => new Athlete(
     '', '12345678901', 'a@b.com', '51987654321',
-    { cep: '90000-000', street: 'R', number: '1', complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
+    { cep: '90000-000', street: 'R', number: 1, complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
     25, 'M', 'Midfielder', makeStats(), 'AMATEUR',
   ), BusinessRuleViolationError, 'Name cannot be empty');
 });
@@ -156,7 +156,7 @@ await test('rejects empty name', () => {
 await test('rejects CPF with wrong digit count', () => {
   assertThrows(() => new Athlete(
     'Test', '123', 'a@b.com', '51987654321',
-    { cep: '90000-000', street: 'R', number: '1', complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
+    { cep: '90000-000', street: 'R', number: 1, complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
     25, 'M', 'Midfielder', makeStats(), 'AMATEUR',
   ), BusinessRuleViolationError, 'CPF');
 });
@@ -164,7 +164,7 @@ await test('rejects CPF with wrong digit count', () => {
 await test('rejects invalid email format', () => {
   assertThrows(() => new Athlete(
     'Test', '12345678901', 'not-an-email', '51987654321',
-    { cep: '90000-000', street: 'R', number: '1', complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
+    { cep: '90000-000', street: 'R', number: 1, complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
     25, 'M', 'Midfielder', makeStats(), 'AMATEUR',
   ), BusinessRuleViolationError, 'Email');
 });
@@ -172,7 +172,7 @@ await test('rejects invalid email format', () => {
 await test('rejects age below 16', () => {
   assertThrows(() => new Athlete(
     'Test', '12345678901', 'a@b.com', '51987654321',
-    { cep: '90000-000', street: 'R', number: '1', complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
+    { cep: '90000-000', street: 'R', number: 1, complement: undefined, neighborhood: 'N', city: 'C', state: 'RS' },
     15, 'M', 'Midfielder', makeStats(), 'AMATEUR',
   ), BusinessRuleViolationError, 'Age');
 });
@@ -262,7 +262,7 @@ console.log('\n━━━ RegisterAthleteUseCase ━━━━━━━━━━�
 const baseInput = {
   name: 'Maria Souza', email: 'maria@email.com', cpf: '98765432100',
   phone: '51912345678', age: 22, gender: 'F' as const,
-  address: { cep: '90000-000', street: 'Rua B', number: '2', complement: undefined, neighborhood: 'Bairro', city: 'Porto Alegre', state: 'RS' },
+  address: { cep: '90000-000', street: 'Rua B', number: 2, complement: undefined, neighborhood: 'Bairro', city: 'Porto Alegre', state: 'RS' },
   password: 'senha123',
 };
 

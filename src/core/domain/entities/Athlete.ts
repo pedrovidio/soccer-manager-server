@@ -4,7 +4,7 @@ import { BusinessRuleViolationError } from '../errors/BusinessRuleViolationError
 export interface Address {
   cep: string;
   street: string;
-  number: string;
+  number: number;
   complement: string | undefined;
   neighborhood: string;
   city: string;
