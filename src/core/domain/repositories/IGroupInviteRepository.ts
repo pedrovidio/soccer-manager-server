@@ -5,4 +5,5 @@ export interface IGroupInviteRepository {
   findById(id: string): Promise<GroupInvite | null>;
   findByGroupAndAthlete(groupId: string, athleteId: string): Promise<GroupInvite | null>;
   findPendingByAthlete(athleteId: string): Promise<GroupInvite[]>;
+  findByGroup(groupId: string): Promise<GroupInvite[]>;
 }

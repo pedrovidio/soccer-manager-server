@@ -8,6 +8,7 @@ export interface CreateGroupInput {
   name: string;
   description?: string;
   pixKey?: string;
+  monthlyFee?: number;
   baseLocation?: { latitude: number; longitude: number };
   goalkeeperPaymentMode?: 'SPLIT' | 'MONTHLY' | 'FREE';
 }
@@ -18,6 +19,8 @@ export interface CreateGroupOutput {
   description: string | undefined;
   adminIds: string[];
   memberIds: string[];
+  pixKey: string | undefined;
+  monthlyFee: number;
   status: string;
   goalkeeperPaymentMode: string;
 }
@@ -43,6 +46,7 @@ export class CreateGroupUseCase {
       input.description,
       undefined,
       input.goalkeeperPaymentMode ?? 'SPLIT',
+      input.monthlyFee ?? 0,
     );
 
     await this.groupRepository.save(group);
@@ -53,6 +57,8 @@ export class CreateGroupUseCase {
       description: group.description,
       adminIds: group.adminIds,
       memberIds: group.memberIds,
+      pixKey: group.pixKey,
+      monthlyFee: input.monthlyFee ?? 0,
       status: group.status,
       goalkeeperPaymentMode: group.goalkeeperPaymentMode,
     };

@@ -6,9 +6,11 @@ import {
   RespondInviteRequestDTO,
   SearchAthletesRequestDTO,
   DelegateAdminRequestDTO,
+  UpdateGroupRequestDTO,
   RevokeAdminRequestDTO,
 } from '../dtos/GroupRequestDTO.js';
 import { CreateGroupUseCase } from '../../../core/use-cases/CreateGroupUseCase.js';
+import { UpdateGroupUseCase } from '../../../core/use-cases/UpdateGroupUseCase.js';
 import { InviteAthleteToGroupUseCase } from '../../../core/use-cases/InviteAthleteToGroupUseCase.js';
 import { RespondGroupInviteUseCase } from '../../../core/use-cases/RespondGroupInviteUseCase.js';
 import { ListInvitesUseCase } from '../../../core/use-cases/ListInvitesUseCase.js';
@@ -19,6 +21,7 @@ import { RevokeGroupAdminUseCase } from '../../../core/use-cases/RevokeGroupAdmi
 import { GetGroupBalanceUseCase } from '../../../core/use-cases/GetGroupBalanceUseCase.js';
 import { PrismaGroupRepository } from '../../database/prisma/repositories/PrismaGroupRepository.js';
 import { PrismaAthleteRepository } from '../../database/prisma/repositories/PrismaAthleteRepository.js';
+import { PrismaMatchRepository } from '../../database/prisma/repositories/PrismaMatchRepository.js';
 import { PrismaGroupInviteRepository } from '../../database/prisma/repositories/PrismaGroupInviteRepository.js';
 import { PrismaNotificationRepository } from '../../database/prisma/repositories/PrismaNotificationRepository.js';
 import { PrismaGroupAdminDelegationRepository } from '../../database/prisma/repositories/PrismaGroupAdminDelegationRepository.js';
@@ -30,6 +33,149 @@ import { BusinessRuleViolationError } from '../../../core/domain/errors/Business
 import { prisma } from '../../database/prisma/client.js';
 
 export class GroupController {
+  async getHome(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId     = req.params['groupId'] as string;
+      const requesterId = req.query['requesterId'] as string;
+      if (!requesterId) { res.status(400).json({ error: 'requesterId is required' }); return; }
+
+      const groupRepo    = new PrismaGroupRepository(prisma);
+      const athleteRepo  = new PrismaAthleteRepository();
+      const matchRepo    = new PrismaMatchRepository(prisma);
+      const financialRepo = new PrismaFinancialRepository();
+
+      const group = await groupRepo.findById(groupId);
+      if (!group) { res.status(404).json({ error: 'Group not found' }); return; }
+
+      const isAdmin = group.isAdmin(requesterId);
+
+      // Members details — admins + mensalistas deduplicated
+      const allMemberIds = [...new Set([...group.adminIds, ...group.memberIds])];
+      const athletes = await Promise.all(allMemberIds.map((id) => athleteRepo.findById(id)));
+      const members = athletes
+        .filter((a): a is NonNullable<typeof a> => a !== null)
+        .map((a) => ({
+          id:       a.id,
+          name:     a.name,
+          position: a.position,
+          overall:  a.calculateOverall(),
+          isAdmin:  group.adminIds.includes(a.id),
+          isInjured: a.isInjured,
+          hasDebt:  a.financialDebt > 0,
+        }));
+
+      // Upcoming matches (next 5)
+      const allMatches = await matchRepo.listByGroup(groupId);
+      const now = new Date();
+      const upcomingMatches = allMatches
+        .filter((m) => m.status === 'SCHEDULED' && m.date > now)
+        .slice(0, 5)
+        .map((m) => ({
+          id:             m.id,
+          date:           m.date,
+          location:       m.location,
+          totalVacancies: m.totalVacancies,
+          confirmedCount: m.confirmedIds.length,
+          status:         m.status,
+        }));
+
+      // Balance (admins only)
+      let balance = null;
+      if (isAdmin) {
+        const transactions = await financialRepo.findByGroupId(groupId);
+        const paid    = transactions.filter((t) => t.status === 'PAID').reduce((s, t) => s + t.amount, 0);
+        const pending = transactions.filter((t) => t.status === 'PENDING').reduce((s, t) => s + t.amount, 0);
+        balance = { cashInHand: paid, totalPending: pending };
+      }
+
+      res.status(200).json({
+        group: {
+          id:                    group.id,
+          name:                  group.name,
+          description:           group.description,
+          monthlyFee:            group.monthlyFee,
+          pixKey:                group.pixKey,
+          goalkeeperPaymentMode: group.goalkeeperPaymentMode,
+          status:                group.status,
+        },
+        isAdmin,
+        members,
+        upcomingMatches,
+        balance,
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async getById(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const repo = new PrismaGroupRepository(prisma);
+      const group = await repo.findById(groupId);
+      if (!group) { res.status(404).json({ error: 'Group not found' }); return; }
+      res.status(200).json({
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        adminIds: group.adminIds,
+        memberIds: group.memberIds,
+        pixKey: group.pixKey,
+        monthlyFee: group.monthlyFee,
+        goalkeeperPaymentMode: group.goalkeeperPaymentMode,
+        status: group.status,
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async update(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const data = UpdateGroupRequestDTO.parse(req.body);
+      await new UpdateGroupUseCase(new PrismaGroupRepository(prisma)).execute({
+        groupId,
+        requesterId:           data.requesterId,
+        ...(data.name                  !== undefined && { name:                  data.name }),
+        ...(data.description           !== undefined && { description:           data.description }),
+        ...(data.pixKey                !== undefined && { pixKey:                data.pixKey }),
+        ...(data.monthlyFee            !== undefined && { monthlyFee:            data.monthlyFee }),
+        ...(data.goalkeeperPaymentMode !== undefined && { goalkeeperPaymentMode: data.goalkeeperPaymentMode }),
+      });
+      res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async listByAthlete(req: Request, res: Response): Promise<void> {
+    try {
+      const athleteId = req.params['athleteId'] as string;
+      const repo = new PrismaGroupRepository(prisma);
+      const groups = await repo.listByMember(athleteId);
+      const adminGroups = await repo.listByAdmin(athleteId);
+      // merge deduplicating by id
+      const all = [...groups];
+      for (const g of adminGroups) {
+        if (!all.find((x) => x.id === g.id)) all.push(g);
+      }
+      res.status(200).json(all.map((g) => ({
+        id: g.id,
+        name: g.name,
+        description: g.description,
+        adminIds: g.adminIds,
+        memberIds: g.memberIds,
+        pixKey: g.pixKey,
+        monthlyFee: g.monthlyFee,
+        goalkeeperPaymentMode: g.goalkeeperPaymentMode,
+        status: g.status,
+      })));
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
   async create(req: Request, res: Response): Promise<void> {
     try {
       const data = CreateGroupRequestDTO.parse(req.body);
@@ -42,6 +188,7 @@ export class GroupController {
         name: data.name,
         ...(data.description          !== undefined && { description:          data.description }),
         ...(data.pixKey               !== undefined && { pixKey:               data.pixKey }),
+        ...(data.monthlyFee           !== undefined && { monthlyFee:           data.monthlyFee }),
         ...(data.baseLocation         !== undefined && { baseLocation:         data.baseLocation }),
         ...(data.goalkeeperPaymentMode !== undefined && { goalkeeperPaymentMode: data.goalkeeperPaymentMode }),
       });
@@ -51,14 +198,48 @@ export class GroupController {
     }
   }
 
+  async listGroupInvites(req: Request, res: Response): Promise<void> {
+    try {
+      const groupId = req.params['groupId'] as string;
+      const inviteRepo = new PrismaGroupInviteRepository(prisma);
+      const athleteRepo = new PrismaAthleteRepository();
+      const invites = await inviteRepo.findByGroup(groupId);
+      const active = invites.filter((i) => i.status === 'PENDING' || i.status === 'ACCEPTED');
+      const withNames = await Promise.all(
+        active.map(async (i) => {
+          const athlete = await athleteRepo.findById(i.athleteId);
+          return {
+            inviteId:  i.id,
+            athleteId: i.athleteId,
+            name:      athlete?.name ?? 'Unknown',
+            position:  athlete?.position ?? 'Undefined',
+            overall:   athlete?.calculateOverall() ?? 0,
+            email:     athlete?.email ?? '',
+            status:    i.status,
+            createdAt: i.createdAt,
+          };
+        })
+      );
+      res.status(200).json(withNames);
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
   async searchAthletes(req: Request, res: Response): Promise<void> {
     try {
       const filters = SearchAthletesRequestDTO.parse(req.query);
-      const useCase = new SearchAthletesUseCase(new PrismaAthleteRepository());
+      const useCase = new SearchAthletesUseCase(
+        new PrismaAthleteRepository(),
+        new PrismaGroupRepository(prisma),
+        new PrismaGroupInviteRepository(prisma),
+      );
       const result = await useCase.execute({
-        ...(filters.name  !== undefined && { name:  filters.name }),
-        ...(filters.cpf   !== undefined && { cpf:   filters.cpf }),
-        ...(filters.email !== undefined && { email: filters.email }),
+        ...(filters.name        !== undefined && { name:        filters.name }),
+        ...(filters.cpf         !== undefined && { cpf:         filters.cpf }),
+        ...(filters.email       !== undefined && { email:       filters.email }),
+        ...(filters.groupId     !== undefined && { groupId:     filters.groupId }),
+        ...(filters.requesterId !== undefined && { requesterId: filters.requesterId }),
       });
       res.status(200).json(result);
     } catch (error) {

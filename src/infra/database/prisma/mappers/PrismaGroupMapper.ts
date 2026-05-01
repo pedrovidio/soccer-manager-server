@@ -10,6 +10,7 @@ interface PrismaGroupRaw {
   baseLocationLongitude: number | null;
   pixKey: string | null;
   photoUrl: string | null;
+  monthlyFee: number;
   status: string;
   goalkeeperPaymentMode: string;
 }
@@ -32,6 +33,7 @@ export class PrismaGroupMapper {
       raw.description ?? undefined,
       raw.photoUrl ?? undefined,
       raw.goalkeeperPaymentMode as GoalkeeperPaymentMode,
+      raw.monthlyFee,
     );
   }
 
@@ -46,6 +48,7 @@ export class PrismaGroupMapper {
       baseLocationLongitude: group.baseLocation?.longitude ?? null,
       pixKey: group.pixKey ?? null,
       photoUrl: group.photoUrl ?? null,
+      monthlyFee: group.monthlyFee,
       status: group.status,
       goalkeeperPaymentMode: group.goalkeeperPaymentMode,
     };

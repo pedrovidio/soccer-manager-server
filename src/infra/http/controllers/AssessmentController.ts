@@ -34,6 +34,7 @@ export class AssessmentController {
       } else if (error instanceof DomainError) {
         res.status(400).json({ error: error.message, code: error.code });
       } else {
+        console.error('[AssessmentController] Unexpected error:', error);
         res.status(500).json({ error: 'An unexpected error occurred' });
       }
     }

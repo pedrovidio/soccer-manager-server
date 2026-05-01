@@ -34,4 +34,12 @@ export class PrismaGroupInviteRepository implements IGroupInviteRepository {
     });
     return results.map((r) => PrismaGroupInviteMapper.toDomain(r as any));
   }
+
+  async findByGroup(groupId: string): Promise<GroupInvite[]> {
+    const results = await this.prisma.groupInvite.findMany({
+      where: { groupId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return results.map((r) => PrismaGroupInviteMapper.toDomain(r as any));
+  }
 }

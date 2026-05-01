@@ -25,6 +25,7 @@ export class Group {
   public baseLocation: { latitude: number; longitude: number } | undefined;
   public status: GroupStatus;
   public goalkeeperPaymentMode: GoalkeeperPaymentMode;
+  public monthlyFee: number;
 
   constructor(
     name: string,
@@ -37,6 +38,7 @@ export class Group {
     description?: string,
     photoUrl?: string,
     goalkeeperPaymentMode: GoalkeeperPaymentMode = 'SPLIT',
+    monthlyFee: number = 0,
   ) {
     this.validateName(name);
 
@@ -50,6 +52,7 @@ export class Group {
     this.baseLocation = baseLocation;
     this.photoUrl = photoUrl;
     this.goalkeeperPaymentMode = goalkeeperPaymentMode;
+    this.monthlyFee = monthlyFee;
   }
 
   private validateName(name: string): void {
