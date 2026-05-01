@@ -197,8 +197,22 @@ model Group {
   status                String  @default("ACTIVE") @map("status")
 
   financialTransactions FinancialTransaction[]
+  memberStatuses        GroupMemberStatus[]
 
   @@map("groups")
+}
+
+model GroupMemberStatus {
+  id        String   @id @default(uuid()) @map("id")
+  groupId   String   @map("group_id")
+  athleteId String   @map("athlete_id")
+  isBlocked Boolean  @default(false) @map("is_blocked")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, athleteId])
+  @@map("group_member_statuses")
 }
 
 model FinancialTransaction {

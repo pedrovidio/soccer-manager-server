@@ -22,6 +22,7 @@ export interface IAthleteRepository {
   findByEmail(email: string): Promise<Athlete | null>;
   save(athlete: Athlete): Promise<void>;
   updateLocation(athleteId: string, latitude: number, longitude: number): Promise<void>;
+  updateInjuredStatus(athleteId: string, isInjured: boolean): Promise<void>;
   findNearby(filters: FindNearbyFilters): Promise<Athlete[]>;
   search(filters: AthleteSearchFilters): Promise<Athlete[]>;
 }

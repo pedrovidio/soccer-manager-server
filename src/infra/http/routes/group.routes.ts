@@ -17,6 +17,9 @@ router.patch('/groups/:groupId/photo', photoUpload.single('photo'), (req, res) =
 router.post('/groups/:groupId/admin/delegate', (req, res) => groupController.delegateAdmin(req, res));
 router.delete('/groups/:groupId/admin/delegate', (req, res) => groupController.revokeAdmin(req, res));
 router.get('/groups/:groupId/balance', (req, res) => groupController.balance(req, res));
+router.patch('/groups/:groupId/members/:athleteId/blocked', (req, res) => groupController.setMemberBlocked(req, res));
+router.patch('/groups/:groupId/members/:athleteId/injured', (req, res) => groupController.setMemberInjured(req, res));
+router.delete('/groups/:groupId/members/:athleteId', (req, res) => groupController.removeMember(req, res));
 
 // Athlete search (for invite flow)
 router.get('/groups/athletes/search', (req, res) => groupController.searchAthletes(req, res));

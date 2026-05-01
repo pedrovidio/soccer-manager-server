@@ -60,6 +60,7 @@ function makeAthleteRepo(store: Map<string, Athlete> = new Map()): IAthleteRepos
     findByEmail:    async (email) => [...store.values()].find((a) => a.email === email) ?? null,
     save:           async (a) => { store.set(a.id, a); },
     updateLocation: async () => {},
+    updateInjuredStatus: async () => {},
     findNearby:     async () => [],
     search:         async (f) => [...store.values()].filter((a) =>
       (!f.name  || a.name.includes(f.name)) &&

@@ -37,4 +37,34 @@ export class PrismaGroupRepository implements IGroupRepository {
     });
     return results.map((raw) => PrismaGroupMapper.toDomain(raw as any));
   }
+
+  async setMemberBlocked(groupId: string, athleteId: string, isBlocked: boolean): Promise<void> {
+    await this.prisma.groupMemberStatus.upsert({
+      where: { groupId_athleteId: { groupId, athleteId } },
+      update: { isBlocked },
+      create: { groupId, athleteId, isBlocked },
+    });
+  }
+
+  async getMemberBlockedStatus(groupId: string, athleteIds: string[]): Promise<Record<string, boolean>> {
+    const statuses = await this.prisma.groupMemberStatus.findMany({
+      where: { groupId, athleteId: { in: athleteIds } },
+    });
+    const map: Record<string, boolean> = {};
+    for (const s of statuses) map[s.athleteId] = s.isBlocked;
+    return map;
+  }
+
+  async removeMember(groupId: string, athleteId: string): Promise<void> {
+    const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) return;
+    await this.prisma.group.update({
+      where: { id: groupId },
+      data: {
+        memberIds: group.memberIds.filter((id) => id !== athleteId),
+        adminIds:  group.adminIds.filter((id) => id !== athleteId),
+      },
+    });
+    await this.prisma.groupMemberStatus.deleteMany({ where: { groupId, athleteId } });
+  }
 }

@@ -17,6 +17,9 @@ import { ListInvitesUseCase } from '../../../core/use-cases/ListInvitesUseCase.j
 import { SearchAthletesUseCase } from '../../../core/use-cases/SearchAthletesUseCase.js';
 import { UploadGroupPhotoUseCase } from '../../../core/use-cases/UploadGroupPhotoUseCase.js';
 import { DelegateGroupAdminUseCase } from '../../../core/use-cases/DelegateGroupAdminUseCase.js';
+import { SetMemberBlockedUseCase } from '../../../core/use-cases/SetMemberBlockedUseCase.js';
+import { SetMemberInjuredUseCase } from '../../../core/use-cases/SetMemberInjuredUseCase.js';
+import { RemoveMemberUseCase } from '../../../core/use-cases/RemoveMemberUseCase.js';
 import { RevokeGroupAdminUseCase } from '../../../core/use-cases/RevokeGroupAdminUseCase.js';
 import { GetGroupBalanceUseCase } from '../../../core/use-cases/GetGroupBalanceUseCase.js';
 import { PrismaGroupRepository } from '../../database/prisma/repositories/PrismaGroupRepository.js';
@@ -52,16 +55,18 @@ export class GroupController {
       // Members details — admins + mensalistas deduplicated
       const allMemberIds = [...new Set([...group.adminIds, ...group.memberIds])];
       const athletes = await Promise.all(allMemberIds.map((id) => athleteRepo.findById(id)));
+      const blockedMap = await groupRepo.getMemberBlockedStatus(groupId, allMemberIds);
       const members = athletes
         .filter((a): a is NonNullable<typeof a> => a !== null)
         .map((a) => ({
-          id:       a.id,
-          name:     a.name,
-          position: a.position,
-          overall:  a.calculateOverall(),
-          isAdmin:  group.adminIds.includes(a.id),
+          id:        a.id,
+          name:      a.name,
+          position:  a.position,
+          overall:   a.calculateOverall(),
+          isAdmin:   group.adminIds.includes(a.id),
           isInjured: a.isInjured,
-          hasDebt:  a.financialDebt > 0,
+          hasDebt:   a.financialDebt > 0,
+          isBlocked: blockedMap[a.id] ?? false,
         }));
 
       // Upcoming matches (next 5)
@@ -365,6 +370,53 @@ export class GroupController {
         ...(from || to ? { filters: { ...(from && { from }), ...(to && { to }) } } : {}),
       });
       res.status(200).json(result);
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async setMemberBlocked(req: Request, res: Response): Promise<void> {
+    try {
+      const { groupId, athleteId } = req.params as { groupId: string; athleteId: string };
+      const { requesterId, isBlocked } = req.body as { requesterId: string; isBlocked: boolean };
+      if (!requesterId || isBlocked === undefined) {
+        res.status(400).json({ error: 'requesterId and isBlocked are required' }); return;
+      }
+      await new SetMemberBlockedUseCase(new PrismaGroupRepository(prisma)).execute({
+        groupId, requesterId, athleteId, isBlocked,
+      });
+      res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async setMemberInjured(req: Request, res: Response): Promise<void> {
+    try {
+      const { groupId, athleteId } = req.params as { groupId: string; athleteId: string };
+      const { requesterId, isInjured } = req.body as { requesterId: string; isInjured: boolean };
+      if (!requesterId || isInjured === undefined) {
+        res.status(400).json({ error: 'requesterId and isInjured are required' }); return;
+      }
+      await new SetMemberInjuredUseCase(
+        new PrismaGroupRepository(prisma),
+        new PrismaAthleteRepository(),
+      ).execute({ groupId, requesterId, athleteId, isInjured });
+      res.status(200).json({ success: true });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  }
+
+  async removeMember(req: Request, res: Response): Promise<void> {
+    try {
+      const { groupId, athleteId } = req.params as { groupId: string; athleteId: string };
+      const requesterId = req.body['requesterId'] as string;
+      if (!requesterId) { res.status(400).json({ error: 'requesterId is required' }); return; }
+      await new RemoveMemberUseCase(new PrismaGroupRepository(prisma)).execute({
+        groupId, requesterId, athleteId,
+      });
+      res.status(200).json({ success: true });
     } catch (error) {
       this.handleError(error, res);
     }

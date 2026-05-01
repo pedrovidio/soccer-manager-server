@@ -36,6 +36,13 @@ export class PrismaAthleteRepository implements IAthleteRepository {
     });
   }
 
+  async updateInjuredStatus(athleteId: string, isInjured: boolean): Promise<void> {
+    await prisma.athlete.update({
+      where: { id: athleteId },
+      data: { isInjured },
+    });
+  }
+
   async updatePhoto(athleteId: string, photoUrl: string): Promise<void> {
     await prisma.athlete.update({
       where: { id: athleteId },
