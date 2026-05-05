@@ -30,11 +30,13 @@ export class SubmitAssessmentUseCase {
       physical:  input.answers.selfRatedPhysical,
     };
 
-    athlete.completeAssessment(
-      assessment.deriveFootballLevel(),
-      input.answers.preferredPosition,
-      stats,
-    );
+    if (athlete.hasCompletedAssessment) {
+      athlete.updatePerformance(stats);
+      (athlete as any).footballLevel = assessment.deriveFootballLevel();
+      (athlete as any).position = input.answers.preferredPosition;
+    } else {
+      athlete.completeAssessment(assessment.deriveFootballLevel(), input.answers.preferredPosition, stats);
+    }
 
     await this.assessmentRepository.save(assessment);
     await this.athleteRepository.save(athlete);

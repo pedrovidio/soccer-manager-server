@@ -4,10 +4,7 @@ import { FootballLevel } from './Athlete.js';
  * Estrutura do questionário (enviado ao app cliente):
  *
  * SEÇÃO 1 — Histórico no Futebol (determina o FootballLevel)
- * Q1: "Você já jogou futebol profissionalmente (contratos remunerados, federações oficiais)?"
- *     opções: ["Sim, joguei profissionalmente", "Não"]
- *
- * Q2: "Qual o nível mais alto em que você já competiu?"
+ * Q1: "Qual o nível mais alto em que você já competiu?"
  *     opções:
  *       "Liga profissional / semiprofissional"  → PROFESSIONAL
  *       "Liga amadora / torneio organizado"     → AMATEUR
@@ -35,7 +32,6 @@ import { FootballLevel } from './Athlete.js';
 
 export interface AssessmentAnswers {
   // Seção 1 — Histórico
-  playedProfessionally: boolean;
   highestLevel: 'PROFESSIONAL' | 'AMATEUR' | 'CASUAL';
   yearsPlaying: 'LESS_THAN_2' | '2_TO_5' | '6_TO_10' | 'MORE_THAN_10';
   weeklyFrequency: 'RARELY' | '1_TO_2' | '3_OR_MORE';
@@ -63,12 +59,7 @@ export class AssessmentAnswer {
     this.submittedAt = submittedAt ?? new Date();
   }
 
-  /**
-   * Deriva o FootballLevel a partir das respostas do questionário.
-   * playedProfessionally = true sempre resulta em PROFESSIONAL, sobrepondo highestLevel.
-   */
   deriveFootballLevel(): FootballLevel {
-    if (this.answers.playedProfessionally) return 'PROFESSIONAL';
     return this.answers.highestLevel;
   }
 }

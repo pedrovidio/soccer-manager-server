@@ -5,6 +5,9 @@ const router = Router();
 const c = new MatchController();
 
 router.post('/matches',                              (req, res) => c.create(req, res));
+router.get('/matches/:matchId',                      (req, res) => c.getDetail(req, res));
+router.get('/matches/:matchId/nearby-athletes',      (req, res) => c.nearbyAthletes(req, res));
+router.patch('/matches/:matchId',                    (req, res) => c.update(req, res));
 router.get('/groups/:groupId/matches',               (req, res) => c.listByGroup(req, res));
 router.patch('/match-invites/:inviteId/respond',     (req, res) => c.respondInvite(req, res));
 router.post('/matches/:matchId/open-vacancies',      (req, res) => c.openVacancies(req, res));

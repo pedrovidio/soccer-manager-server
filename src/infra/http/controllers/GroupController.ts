@@ -29,6 +29,7 @@ import { PrismaGroupInviteRepository } from '../../database/prisma/repositories/
 import { PrismaNotificationRepository } from '../../database/prisma/repositories/PrismaNotificationRepository.js';
 import { PrismaGroupAdminDelegationRepository } from '../../database/prisma/repositories/PrismaGroupAdminDelegationRepository.js';
 import { PrismaFinancialRepository } from '../../database/prisma/repositories/PrismaFinancialRepository.js';
+import { PrismaMatchInviteRepository } from '../../database/prisma/repositories/PrismaMatchInviteRepository.js';
 import { WhatsAppService } from '../../services/WhatsAppService.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
@@ -292,6 +293,8 @@ export class GroupController {
       const useCase = new ListInvitesUseCase(
         new PrismaGroupInviteRepository(prisma),
         new PrismaGroupRepository(prisma),
+        new PrismaMatchInviteRepository(prisma),
+        new PrismaMatchRepository(prisma),
       );
       const result = await useCase.execute({ athleteId });
       res.status(200).json(result);

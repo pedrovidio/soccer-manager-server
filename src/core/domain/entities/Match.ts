@@ -26,6 +26,7 @@ export class Match {
   public readonly maxAge: number;
   public confirmedIds: string[];
   public checkedInIds: string[];
+  public isRecurring: boolean;
   public status: MatchStatus;
 
   constructor(
@@ -45,6 +46,7 @@ export class Match {
     checkedInIds: string[] = [],
     status: MatchStatus = MatchStatus.SCHEDULED,
     id?: string,
+    isRecurring: boolean = false,
   ) {
     if (minAge > maxAge) throw new BusinessRuleViolationError('Minimum age cannot be greater than maximum age');
     if (totalVacancies < 1) throw new BusinessRuleViolationError('Total vacancies must be at least 1');
@@ -66,6 +68,7 @@ export class Match {
     this.confirmedIds     = [...confirmedIds];
     this.checkedInIds     = [...checkedInIds];
     this.status           = status;
+    this.isRecurring      = isRecurring;
   }
 
   public canCheckIn(currentTime: Date): boolean {

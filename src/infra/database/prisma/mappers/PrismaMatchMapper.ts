@@ -19,6 +19,7 @@ export class PrismaMatchMapper {
       raw.checkedInIds ?? [],
       raw.status as MatchStatus,
       raw.id,
+      raw.isRecurring ?? false,
     );
   }
 
@@ -39,6 +40,7 @@ export class PrismaMatchMapper {
       maxAge:           match.maxAge,
       confirmedIds:     match.confirmedIds,
       checkedInIds:     match.checkedInIds,
+      isRecurring:      match.isRecurring,
       status:           match.status,
     };
   }

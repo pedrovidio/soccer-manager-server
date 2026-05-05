@@ -152,7 +152,6 @@ model AthleteSocialAccount {
 model Assessment {
   id                   String          @id @default(uuid()) @map("id")
   athleteId            String          @unique @map("athlete_id")
-  playedProfessionally Boolean         @map("played_professionally")
   highestLevel         FootballLevel   @map("highest_level")
   yearsPlaying         YearsPlaying    @map("years_playing")
   weeklyFrequency      WeeklyFrequency @map("weekly_frequency")
@@ -249,6 +248,7 @@ model Match {
   maxAge           Int         @default(99) @map("max_age")
   confirmedIds     String[]    @map("confirmed_ids")
   checkedInIds     String[]    @map("checked_in_ids")
+  isRecurring      Boolean     @default(false) @map("is_recurring")
   status           MatchStatus @default(SCHEDULED) @map("status")
 
   financialTransactions FinancialTransaction[]

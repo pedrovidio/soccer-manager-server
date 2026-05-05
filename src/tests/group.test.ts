@@ -8,6 +8,8 @@ import { ListNotificationsUseCase } from '../core/use-cases/ListNotificationsUse
 import { PrismaGroupRepository } from '../infra/database/prisma/repositories/PrismaGroupRepository.js';
 import { PrismaAthleteRepository } from '../infra/database/prisma/repositories/PrismaAthleteRepository.js';
 import { PrismaGroupInviteRepository } from '../infra/database/prisma/repositories/PrismaGroupInviteRepository.js';
+import { PrismaMatchInviteRepository } from '../infra/database/prisma/repositories/PrismaMatchInviteRepository.js';
+import { PrismaMatchRepository } from '../infra/database/prisma/repositories/PrismaMatchRepository.js';
 import { PrismaNotificationRepository } from '../infra/database/prisma/repositories/PrismaNotificationRepository.js';
 import { WhatsAppService } from '../infra/services/WhatsAppService.js';
 
@@ -23,7 +25,9 @@ const whatsApp        = new WhatsAppService();
 const createGroup       = new CreateGroupUseCase(groupRepo, athleteRepo);
 const inviteAthlete     = new InviteAthleteToGroupUseCase(groupRepo, athleteRepo, inviteRepo, notificationRepo, whatsApp);
 const respondInvite     = new RespondGroupInviteUseCase(groupRepo, inviteRepo, notificationRepo);
-const listInvites       = new ListInvitesUseCase(inviteRepo, groupRepo);
+const matchInviteRepo   = new PrismaMatchInviteRepository(prisma);
+const matchRepo         = new PrismaMatchRepository(prisma);
+const listInvites       = new ListInvitesUseCase(inviteRepo, groupRepo, matchInviteRepo, matchRepo);
 const listNotifications = new ListNotificationsUseCase(notificationRepo);
 
 // ─── Test Runner ─────────────────────────────────────────────────────────────

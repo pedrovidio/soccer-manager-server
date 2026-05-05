@@ -40,7 +40,6 @@ function makeAthlete(overrides: Partial<{
 
 function makeAssessmentAnswers(overrides: Partial<AssessmentAnswers> = {}): AssessmentAnswers {
   return {
-    playedProfessionally: false,
     highestLevel: 'AMATEUR',
     yearsPlaying: '2_TO_5',
     weeklyFrequency: '1_TO_2',
@@ -246,15 +245,9 @@ await test('completeAssessment throws if already completed', () => {
 
 console.log('\n━━━ AssessmentAnswer — deriveFootballLevel ━━━━━━━━━━━━━━━━━━━━━');
 
-await test('playedProfessionally=true always returns PROFESSIONAL', () => {
-  const a = new AssessmentAnswer('id', makeAssessmentAnswers({ playedProfessionally: true, highestLevel: 'CASUAL' }));
-  assert(a.deriveFootballLevel() === 'PROFESSIONAL', 'must be PROFESSIONAL');
-});
 
-await test('playedProfessionally=false uses highestLevel', () => {
-  const a = new AssessmentAnswer('id', makeAssessmentAnswers({ playedProfessionally: false, highestLevel: 'CASUAL' }));
-  assert(a.deriveFootballLevel() === 'CASUAL', 'must be CASUAL');
-});
+
+
 
 // ─── RegisterAthleteUseCase ───────────────────────────────────────────────────
 
@@ -453,3 +446,5 @@ console.log('\n━━━━━━━━━━━━━━━━━━━━━�
 console.log(`\n🏁 Results: ${passed} passed, ${failed} failed\n`);
 
 if (failed > 0) process.exit(1);
+
+

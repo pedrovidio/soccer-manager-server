@@ -4,7 +4,6 @@ import { YearsPlaying, WeeklyFrequency } from '@prisma/client';
 interface PrismaAssessment {
   id: string;
   athleteId: string;
-  playedProfessionally: boolean;
   highestLevel: string;
   yearsPlaying: YearsPlaying;
   weeklyFrequency: WeeklyFrequency;
@@ -47,7 +46,6 @@ const FREQ_TO_PRISMA: Record<AssessmentAnswers['weeklyFrequency'], WeeklyFrequen
 export class PrismaAssessmentMapper {
   static toDomain(raw: PrismaAssessment): AssessmentAnswer {
     const answers: AssessmentAnswers = {
-      playedProfessionally: raw.playedProfessionally,
       highestLevel:         raw.highestLevel as AssessmentAnswers['highestLevel'],
       yearsPlaying:         YEARS_TO_DOMAIN[raw.yearsPlaying],
       weeklyFrequency:      FREQ_TO_DOMAIN[raw.weeklyFrequency],
@@ -65,7 +63,6 @@ export class PrismaAssessmentMapper {
   static toPersistence(assessment: AssessmentAnswer) {
     return {
       athleteId:            assessment.athleteId,
-      playedProfessionally: assessment.answers.playedProfessionally,
       highestLevel:         assessment.answers.highestLevel,
       yearsPlaying:         YEARS_TO_PRISMA[assessment.answers.yearsPlaying],
       weeklyFrequency:      FREQ_TO_PRISMA[assessment.answers.weeklyFrequency],

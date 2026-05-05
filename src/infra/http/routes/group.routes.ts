@@ -33,5 +33,8 @@ router.get('/athletes/:athleteId/invites', (req, res) => groupController.listInv
 // Notifications (in-app messages)
 router.get('/athletes/:athleteId/notifications', (req, res) => notificationController.list(req, res));
 router.patch('/notifications/:notificationId/read', (req, res) => notificationController.markAsRead(req, res));
+router.patch('/athletes/:athleteId/notifications/read-all', (req, res) => notificationController.markAllAsRead(req, res));
+router.delete('/athletes/:athleteId/notifications/:notificationId', (req, res) => notificationController.deleteOne(req, res));
+router.delete('/athletes/:athleteId/notifications', (req, res) => notificationController.deleteAll(req, res));
 
 export { router as groupRouter };

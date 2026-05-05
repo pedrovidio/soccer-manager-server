@@ -18,8 +18,38 @@ export class NotificationController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const notificationId = req.params['notificationId'] as string;
-      const repo = new PrismaNotificationRepository(prisma);
-      await repo.markAsRead(notificationId);
+      await new PrismaNotificationRepository(prisma).markAsRead(notificationId);
+      res.status(200).json({ success: true });
+    } catch {
+      res.status(500).json({ error: 'An unexpected error occurred' });
+    }
+  }
+
+  async markAllAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const athleteId = req.params['athleteId'] as string;
+      await prisma.notification.updateMany({ where: { athleteId }, data: { isRead: true } });
+      res.status(200).json({ success: true });
+    } catch {
+      res.status(500).json({ error: 'An unexpected error occurred' });
+    }
+  }
+
+  async deleteOne(req: Request, res: Response): Promise<void> {
+    try {
+      const notificationId = req.params['notificationId'] as string;
+      const athleteId = req.params['athleteId'] as string;
+      await prisma.notification.deleteMany({ where: { id: notificationId, athleteId } });
+      res.status(200).json({ success: true });
+    } catch {
+      res.status(500).json({ error: 'An unexpected error occurred' });
+    }
+  }
+
+  async deleteAll(req: Request, res: Response): Promise<void> {
+    try {
+      const athleteId = req.params['athleteId'] as string;
+      await prisma.notification.deleteMany({ where: { athleteId } });
       res.status(200).json({ success: true });
     } catch {
       res.status(500).json({ error: 'An unexpected error occurred' });

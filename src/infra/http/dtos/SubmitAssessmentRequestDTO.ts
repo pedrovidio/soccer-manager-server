@@ -7,8 +7,6 @@ const statAttribute = z
 
 export const SubmitAssessmentRequestDTO = z.object({
   // Seção 1 — Histórico no Futebol
-  playedProfessionally: z.boolean({ error: 'Informe se você já jogou futebol profissionalmente.' }),
-
   highestLevel: z.enum(['PROFESSIONAL', 'AMATEUR', 'CASUAL'], {
     error: 'Selecione o nível mais alto em que você já competiu.',
   }),

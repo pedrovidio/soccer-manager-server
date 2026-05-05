@@ -24,6 +24,7 @@ export interface CreateMatchInput {
   minOverall?: number;
   minAge?: number;
   maxAge?: number;
+  isRecurring?: boolean;
 }
 
 export interface CreateMatchOutput {
@@ -66,12 +67,22 @@ export class CreateMatchUseCase {
       input.minOverall ?? 0,
       input.minAge ?? 16,
       input.maxAge ?? 99,
+      [],
+      [],
+      undefined,
+      undefined,
+      input.isRecurring ?? false,
     );
 
+    // Auto-confirma o admin que criou a partida
+    match.confirmPresence(input.adminId);
     await this.matchRepository.save(match);
 
+    const adminInvite = new MatchInvite(match.id, input.adminId, 'MEMBER', 'ACCEPTED');
+    await this.matchInviteRepository.save(adminInvite);
+
     const memberIds = [...group.adminIds, ...group.memberIds].filter(
-      (id, idx, arr) => arr.indexOf(id) === idx,
+      (id, idx, arr) => arr.indexOf(id) === idx && id !== input.adminId,
     );
 
     let invitesSent = 0;

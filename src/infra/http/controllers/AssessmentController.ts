@@ -7,6 +7,7 @@ import { PrismaAssessmentRepository } from '../../database/prisma/repositories/P
 import { EntityNotFoundError } from '../../../core/domain/errors/EntityNotFoundError.js';
 import { BusinessRuleViolationError } from '../../../core/domain/errors/BusinessRuleViolationError.js';
 import { DomainError } from '../../../core/domain/errors/DomainError.js';
+import { prisma } from '../../database/prisma/client.js';
 
 export class AssessmentController {
   async submit(req: Request, res: Response): Promise<void> {
@@ -37,6 +38,28 @@ export class AssessmentController {
         console.error('[AssessmentController] Unexpected error:', error);
         res.status(500).json({ error: 'An unexpected error occurred' });
       }
+    }
+  }
+
+  async get(req: Request, res: Response): Promise<void> {
+    try {
+      const { athleteId } = req.params as { athleteId: string };
+      const assessment = await prisma.assessment.findUnique({ where: { athleteId } });
+      if (!assessment) { res.status(404).json({ error: 'Assessment not found' }); return; }
+      res.status(200).json({
+        highestLevel:         assessment.highestLevel,
+        yearsPlaying:         assessment.yearsPlaying,
+        weeklyFrequency:      assessment.weeklyFrequency,
+        selfRatedPace:        assessment.selfRatedPace,
+        selfRatedShooting:    assessment.selfRatedShooting,
+        selfRatedPassing:     assessment.selfRatedPassing,
+        selfRatedDribbling:   assessment.selfRatedDribbling,
+        selfRatedDefense:     assessment.selfRatedDefense,
+        selfRatedPhysical:    assessment.selfRatedPhysical,
+        preferredPosition:    assessment.preferredPosition,
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'An unexpected error occurred' });
     }
   }
 }

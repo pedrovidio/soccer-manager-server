@@ -14,6 +14,7 @@ export const CreateMatchRequestDTO = z.object({
   minOverall:       z.number().int().min(0).max(100).default(0),
   minAge:           z.number().int().min(16).default(16),
   maxAge:           z.number().int().max(99).default(99),
+  isRecurring:      z.boolean().default(false),
 });
 
 export const RespondMatchInviteRequestDTO = z.object({
