@@ -4,28 +4,23 @@ import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
-// Porto Alegre neighborhoods with real coordinates
+// Porto Alegre - Zona Leste neighborhoods with real coordinates
 const neighborhoods = [
-  { name: 'Moinhos de Vento',   cep: '90570-020', lat: -30.0277, lng: -51.2003 },
-  { name: 'Bela Vista',         cep: '90160-180', lat: -30.0412, lng: -51.2134 },
-  { name: 'Petrópolis',         cep: '90460-160', lat: -30.0350, lng: -51.1980 },
-  { name: 'Menino Deus',        cep: '90130-060', lat: -30.0530, lng: -51.2180 },
-  { name: 'Cidade Baixa',       cep: '90050-170', lat: -30.0450, lng: -51.2220 },
-  { name: 'Bom Fim',            cep: '90035-120', lat: -30.0380, lng: -51.2150 },
-  { name: 'Santana',            cep: '90040-370', lat: -30.0310, lng: -51.2100 },
-  { name: 'Floresta',           cep: '90220-020', lat: -30.0260, lng: -51.2050 },
-  { name: 'Navegantes',         cep: '90240-300', lat: -30.0200, lng: -51.2200 },
-  { name: 'Sarandi',            cep: '91130-000', lat: -30.0050, lng: -51.1500 },
-  { name: 'Rubem Berta',        cep: '91220-000', lat: -29.9980, lng: -51.1400 },
-  { name: 'Passo das Pedras',   cep: '91350-000', lat: -30.0100, lng: -51.1300 },
-  { name: 'Ipanema',            cep: '91760-000', lat: -30.1200, lng: -51.2400 },
-  { name: 'Cavalhada',          cep: '91740-000', lat: -30.1100, lng: -51.2300 },
-  { name: 'Tristeza',           cep: '91920-000', lat: -30.1050, lng: -51.2500 },
-  { name: 'Vila Nova',          cep: '91710-000', lat: -30.0900, lng: -51.2100 },
-  { name: 'Cristal',            cep: '91910-000', lat: -30.0800, lng: -51.2350 },
   { name: 'Jardim Botânico',    cep: '90690-000', lat: -30.0600, lng: -51.1800 },
   { name: 'Chácara das Pedras', cep: '91330-000', lat: -30.0480, lng: -51.1700 },
   { name: 'Três Figueiras',     cep: '91330-000', lat: -30.0420, lng: -51.1650 },
+  { name: 'Moinhos de Vento',   cep: '90570-020', lat: -30.0277, lng: -51.2003 },
+  { name: 'Petrópolis',         cep: '90460-160', lat: -30.0350, lng: -51.1980 },
+  { name: 'Mont Serrat',        cep: '90450-000', lat: -30.0390, lng: -51.1920 },
+  { name: 'Auxiliadora',        cep: '90540-000', lat: -30.0310, lng: -51.1870 },
+  { name: 'Rio Branco',         cep: '90420-000', lat: -30.0330, lng: -51.1950 },
+  { name: 'Bela Vista',         cep: '90160-180', lat: -30.0412, lng: -51.2134 },
+  { name: 'Boa Vista',          cep: '91340-000', lat: -30.0450, lng: -51.1750 },
+  { name: 'Passo da Areia',     cep: '91030-000', lat: -30.0200, lng: -51.1600 },
+  { name: 'São João',           cep: '91040-000', lat: -30.0250, lng: -51.1700 },
+  { name: 'Higienópolis',       cep: '90550-000', lat: -30.0280, lng: -51.1800 },
+  { name: 'Independência',      cep: '90035-000', lat: -30.0300, lng: -51.2050 },
+  { name: 'Floresta',           cep: '90220-020', lat: -30.0260, lng: -51.2050 },
 ];
 
 const streets = [
